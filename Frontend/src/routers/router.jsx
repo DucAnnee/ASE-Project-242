@@ -4,6 +4,8 @@ import Home from "../pages/Home";
 import Login from "../pages/Login/Login";
 import LoginUser from "../pages/Login/LoginUser";
 import LoginAdmin from "../pages/Login/LoginAdmin";
+import Schedule from "../pages/Schedule";
+import BookingHistory from "../pages/BookingHistory";
 
 const router = createBrowserRouter([
   {
@@ -14,12 +16,20 @@ const router = createBrowserRouter([
         path: "/",
         element: <Home />,
       },
+      {
+        path: "/schedule",
+        element: <Schedule />,
+      },
+      {
+        path: "/history",
+        element: <BookingHistory />,
+      },
     ],
   },
-  {
-    path: "/signup",
-    element: <Login />,
-  },
+  // {
+  //   path: "/signup",
+  //   element: <Login />,
+  // },
   {
     path: "/login",
     element: <Login />,
