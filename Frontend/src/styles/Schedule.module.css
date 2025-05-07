@@ -3,6 +3,10 @@ body {
   padding: 0;
   /* background: linear-gradient(to bottom right, #f0f8ff, #e6f2ff); */
   background-image: url("../assets/background.jpg");
+  background-size: cover; /* Makes image cover the entire viewport */
+  background-position: center; /* Centers the image */
+  background-repeat: no-repeat; /* Prevents image from repeating */
+  background-attachment: fixed; /* Keeps background fixed when scrolling */
   min-height: 100vh;
 }
 
