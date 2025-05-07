@@ -8,12 +8,12 @@ import hcmut_logo from "../assets/HCMUT.png";
 const Footer = () => {
   return (
     <Box
-      component="footer"
+      // component="footer"
       sx={{
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        position: "fixed",
+        // position: "sticky",
         bottom: 0,
         width: "100%",
         py: 2,
