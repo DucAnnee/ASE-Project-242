@@ -1,32 +1,134 @@
+body {
+  margin: 0;
+  padding: 0;
+  /* background: linear-gradient(to bottom right, #f0f8ff, #e6f2ff); */
+  background-image: url("../assets/background.jpg");
+  min-height: 100vh;
+}
+
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 30px;
   font-family: Arial, sans-serif;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  min-height: 90vh;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: none;
 }
 
 .filters {
   display: flex;
   align-items: center;
-  gap: 10px;
-  border: 1px solid #ccc;
-  padding: 10px;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+  gap: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  border-radius: 10px;
+  background-color: rgba(233, 246, 253, 0.9); /* Light blue background */
   width: 100%;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.filters:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  background-color: rgba(226, 242, 253, 0.95);
+}
+
+.filters label {
+  margin-right: 4px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.filters select {
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #c5d7e3;
+  border-radius: 4px;
+  background: white;
+  color: #2c3e50;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.filters select:hover {
+  border-color: #90b5ce;
+}
+
+.filters select:focus {
+  outline: none;
+  border-color: #4fc3f7;
+  box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.2);
+}
+.scheduleWrapper {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  margin: 10px 0 24px;
+}
+
+.headerRow {
+  background: linear-gradient(to right, #e6f2ff, #d0e8f2);
+}
+
+.dayCell {
+  flex: 1;
+  border: 1px solid #d0e8f2;
+  height: 54px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.timeCell {
+  width: 80px;
+  text-align: center;
+  line-height: 40px;
+  font-weight: bold;
+  flex-shrink: 0;
+  background-color: #f0f8ff;
+  border-right: 1px solid #d0e8f2;
+}
+
+.slotCell {
+  flex: 1;
+  border: 1px solid #e1e1e1;
+  height: 40px;
+  cursor: pointer;
+  background-color: white;
+  transition: background-color 0.2s;
+}
+
+.slotCell:hover {
+  background-color: #e6f7ff;
+}
+
+.selected {
+  background-color: #90e0ef;
+}
+
+.booked {
+  background-color: #0077b6;
+  cursor: not-allowed;
 }
 
 .weekNavButtons {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 16px;
   margin: 20px 0;
 }
 
@@ -45,19 +147,71 @@
 
 .weekNavButtons {
   display: flex;
-  gap: 10px;
-  margin-top: 10px;
+  justify-content: center;
+  gap: 16px;
+  margin: 20px 0;
 }
 
 .prevWeek,
 .nextWeek {
-  padding: 8px 16px;
-  font-size: 14px;
-  background-color: #0077b6;
+  padding: 10px 20px;
+  font-size: 15px;
+  background: linear-gradient(to bottom, #4fc3f7, #03a9f4);
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 5px rgba(3, 169, 244, 0.3);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prevWeek::before,
+.nextWeek::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-100%);
+  transition: transform 0.4s ease;
+}
+
+.prevWeek:hover,
+.nextWeek:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 10px rgba(3, 169, 244, 0.4);
+  background: linear-gradient(to bottom, #03a9f4, #0288d1);
+}
+
+.prevWeek:hover::before,
+.nextWeek:hover::before {
+  transform: translateX(0);
+}
+
+.prevWeek:active,
+.nextWeek:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 3px rgba(3, 169, 244, 0.3);
+}
+
+/* Optional: Add distinctive icons for prev/next */
+.prevWeek::after {
+  content: "◀";
+  margin-right: 5px;
+}
+
+.nextWeek::after {
+  content: "▶";
+  margin-left: 5px;
 }
 
 .scheduleWrapper {

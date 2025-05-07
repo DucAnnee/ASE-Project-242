@@ -101,12 +101,8 @@ const Schedule = () => {
       </div>
 
       <div className={styles.weekNavButtons}>
-        <button className={styles.prevWeek} onClick={() => setWeekOffset((o) => o - 1)}>
-          &lt;&lt; Tuần trước
-        </button>
-        <button className={styles.nextWeek} onClick={() => setWeekOffset((o) => o + 1)}>
-          &gt;&gt; Tuần tiếp
-        </button>
+        <button className={styles.prevWeek} onClick={() => setWeekOffset((o) => o - 1)}></button>
+        <button className={styles.nextWeek} onClick={() => setWeekOffset((o) => o + 1)}></button>
       </div>
 
       <div className={styles.scheduleWrapper}>
