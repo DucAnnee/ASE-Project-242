@@ -7,7 +7,7 @@ import bg from "../../assets/bg.png";
 import hcmut_logo from "../../assets/HCMUT.png";
 export default function Login() {
   const navigate = useNavigate();
-  
+
   return (
     <Box
       sx={{
@@ -40,6 +40,7 @@ export default function Login() {
           justifyContent: "center",
           alignItems: "center",
           borderRadius: "22px",
+          mt: "10vh",
         }}>
         <Box
           sx={{
