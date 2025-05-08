@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./Frontend
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_API_URL=http://backend:8000/api
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./Backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=mysql://root:password@mysql:3306/scams
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=8000
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: always
+
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=scams
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./Backend/ROMS.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mysql-data:
