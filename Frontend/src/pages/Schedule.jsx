@@ -75,164 +75,171 @@ const Schedule = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <div className={styles.filters}>
-          <label>Campus</label>
-          <select value={campus} onChange={(e) => setCampus(e.target.value)}>
-            <option value="">Chọn Campus</option>
-            {Object.keys(campuses).map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-          <label>Building</label>
-          <select value={building} onChange={(e) => setBuilding(e.target.value)} disabled={!campus}>
-            <option value="">Chọn Building</option>
-            {campus && campuses[campus].map((b) => <option key={b}>{b}</option>)}
-          </select>
-          <label>Room</label>
-          <select value={room} onChange={(e) => setRoom(e.target.value)} disabled={!building}>
-            <option value="">Chọn Room</option>
-            {rooms.map((r) => (
-              <option key={r}>{r}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className={styles.weekNavButtons}>
-        <button className={styles.prevWeek} onClick={() => setWeekOffset((o) => o - 1)}></button>
-        <button className={styles.nextWeek} onClick={() => setWeekOffset((o) => o + 1)}></button>
-      </div>
-
-      <div className={styles.scheduleWrapper}>
-        <div className={styles.scheduleGrid}>
-          <div className={styles.headerRow}>
-            <div className={styles.timeCell}></div>
-            {weekDates.map((d) => {
-              const wd = d.toLocaleDateString("en-US", { weekday: "short" });
-              const md = `${d.getDate()}/${d.getMonth() + 1}`; // Changed from MM/DD to DD/MM
-              return (
-                <div key={d} className={styles.dayCell}>
-                  <div className={styles.date}>{md}</div>
-                  <div className={styles.weekday}>{wd}</div>
-                </div>
-              );
-            })}
+    <>
+      <div className={styles.pageBackground}></div>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <div className={styles.filters}>
+            <label>Campus</label>
+            <select value={campus} onChange={(e) => setCampus(e.target.value)}>
+              <option value="">Chọn Campus</option>
+              {Object.keys(campuses).map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+            <label>Building</label>
+            <select
+              value={building}
+              onChange={(e) => setBuilding(e.target.value)}
+              disabled={!campus}
+            >
+              <option value="">Chọn Building</option>
+              {campus && campuses[campus].map((b) => <option key={b}>{b}</option>)}
+            </select>
+            <label>Room</label>
+            <select value={room} onChange={(e) => setRoom(e.target.value)} disabled={!building}>
+              <option value="">Chọn Room</option>
+              {rooms.map((r) => (
+                <option key={r}>{r}</option>
+              ))}
+            </select>
           </div>
-          {hours.map((hour) => (
-            <div key={hour} className={styles.row}>
-              <div className={styles.timeCell}>{hour}</div>
+        </div>
+
+        <div className={styles.weekNavButtons}>
+          <button className={styles.prevWeek} onClick={() => setWeekOffset((o) => o - 1)}></button>
+          <button className={styles.nextWeek} onClick={() => setWeekOffset((o) => o + 1)}></button>
+        </div>
+
+        <div className={styles.scheduleWrapper}>
+          <div className={styles.scheduleGrid}>
+            <div className={styles.headerRow}>
+              <div className={styles.timeCell}></div>
               {weekDates.map((d) => {
-                const dayLabel = d.toLocaleDateString("en-US", { weekday: "short" });
-                const slotDate = `${d.getDate()}/${d.getMonth() + 1}`; // Changed from MM/DD to DD/MM
-                const slot = `${slotDate}-${dayLabel}-${hour}`;
-                const isSelected = selectedSlots.includes(slot);
-                const isBooked = bookedSlots.includes(slot);
+                const wd = d.toLocaleDateString("en-US", { weekday: "short" });
+                const md = `${d.getDate()}/${d.getMonth() + 1}`; // Changed from MM/DD to DD/MM
                 return (
-                  <div
-                    key={slot}
-                    className={`${styles.slotCell} ${isSelected ? styles.selected : ""} ${
-                      isBooked ? styles.booked : ""
-                    }`}
-                    onClick={() => handleSlotClick(dayLabel, hour, d)}
-                  ></div>
+                  <div key={d} className={styles.dayCell}>
+                    <div className={styles.date}>{md}</div>
+                    <div className={styles.weekday}>{wd}</div>
+                  </div>
                 );
               })}
             </div>
-          ))}
-        </div>
-      </div>
-
-      <button className={styles.bookButton} onClick={handleBook}>
-        Book
-      </button>
-
-      {showModal && (
-        <div className={styles.modalBackdrop}>
-          <div className={styles.modal}>
-            <h3 className={styles.modalTitle}>Confirm your appointment</h3>
-            <div className={styles.modalContent}>
-              <p>
-                <strong>Name:</strong> Nguyen Vu
-              </p>
-              <p>
-                <strong>Campus:</strong> {campus}
-              </p>
-              <p>
-                <strong>Building:</strong> {building}
-              </p>
-              <p>
-                <strong>Room:</strong> {room}
-              </p>
-              <p>
-                <strong>Time:</strong>{" "}
-                <div style={{ marginTop: "8px", paddingLeft: "20px" }}>
-                  {(() => {
-                    // Group slots by day
-                    const slotsByDay = {};
-                    selectedSlots.forEach((slot) => {
-                      const [date, day, time] = slot.split("-");
-                      const dayKey = `${date} ${day}`;
-                      if (!slotsByDay[dayKey]) {
-                        slotsByDay[dayKey] = [];
-                      }
-                      // Extract hour as a number for sorting
-                      const hour = parseInt(time.split(":")[0]);
-                      slotsByDay[dayKey].push(hour);
-                    });
-
-                    // Convert grouped slots to readable ranges
-                    return Object.entries(slotsByDay).map(([dayKey, hours], index) => {
-                      // Sort hours
-                      hours.sort((a, b) => a - b);
-
-                      // Group consecutive hours
-                      const ranges = [];
-                      let start = hours[0];
-                      let end = hours[0];
-
-                      for (let i = 1; i < hours.length; i++) {
-                        if (hours[i] === end + 1) {
-                          // Consecutive hour, extend the range
-                          end = hours[i];
-                        } else {
-                          // Non-consecutive, add current range and start a new one
-                          ranges.push({ start, end });
-                          start = hours[i];
-                          end = hours[i];
-                        }
-                      }
-                      // Add the last range
-                      ranges.push({ start, end });
-
-                      // Format ranges as strings
-                      const timeRanges = ranges.map((range) => {
-                        if (range.start === range.end) {
-                          return `${range.start}:00`;
-                        }
-                        return `${range.start}:00 to ${range.end + 1}:00`;
-                      });
-
-                      return (
-                        <div key={index} style={{ marginBottom: "4px" }}>
-                          - {dayKey} at {timeRanges.join(", ")}
-                        </div>
-                      );
-                    });
-                  })()}
-                </div>
-              </p>
-            </div>
-            <div className={styles.modalActions}>
-              <button onClick={confirmBooking}>OK</button>
-              <button onClick={() => setShowModal(false)}>Cancel</button>
-            </div>
+            {hours.map((hour) => (
+              <div key={hour} className={styles.row}>
+                <div className={styles.timeCell}>{hour}</div>
+                {weekDates.map((d) => {
+                  const dayLabel = d.toLocaleDateString("en-US", { weekday: "short" });
+                  const slotDate = `${d.getDate()}/${d.getMonth() + 1}`; // Changed from MM/DD to DD/MM
+                  const slot = `${slotDate}-${dayLabel}-${hour}`;
+                  const isSelected = selectedSlots.includes(slot);
+                  const isBooked = bookedSlots.includes(slot);
+                  return (
+                    <div
+                      key={slot}
+                      className={`${styles.slotCell} ${isSelected ? styles.selected : ""} ${
+                        isBooked ? styles.booked : ""
+                      }`}
+                      onClick={() => handleSlotClick(dayLabel, hour, d)}
+                    ></div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
         </div>
-      )}
-      <ToastContainer />
-    </div>
+
+        <button className={styles.bookButton} onClick={handleBook}>
+          Book
+        </button>
+
+        {showModal && (
+          <div className={styles.modalBackdrop}>
+            <div className={styles.modal}>
+              <h3 className={styles.modalTitle}>Confirm your appointment</h3>
+              <div className={styles.modalContent}>
+                <p>
+                  <strong>Name:</strong> Nguyen Vu
+                </p>
+                <p>
+                  <strong>Campus:</strong> {campus}
+                </p>
+                <p>
+                  <strong>Building:</strong> {building}
+                </p>
+                <p>
+                  <strong>Room:</strong> {room}
+                </p>
+                <p>
+                  <strong>Time:</strong>{" "}
+                  <div style={{ marginTop: "8px", paddingLeft: "20px" }}>
+                    {(() => {
+                      // Group slots by day
+                      const slotsByDay = {};
+                      selectedSlots.forEach((slot) => {
+                        const [date, day, time] = slot.split("-");
+                        const dayKey = `${date} ${day}`;
+                        if (!slotsByDay[dayKey]) {
+                          slotsByDay[dayKey] = [];
+                        }
+                        // Extract hour as a number for sorting
+                        const hour = parseInt(time.split(":")[0]);
+                        slotsByDay[dayKey].push(hour);
+                      });
+
+                      // Convert grouped slots to readable ranges
+                      return Object.entries(slotsByDay).map(([dayKey, hours], index) => {
+                        // Sort hours
+                        hours.sort((a, b) => a - b);
+
+                        // Group consecutive hours
+                        const ranges = [];
+                        let start = hours[0];
+                        let end = hours[0];
+
+                        for (let i = 1; i < hours.length; i++) {
+                          if (hours[i] === end + 1) {
+                            // Consecutive hour, extend the range
+                            end = hours[i];
+                          } else {
+                            // Non-consecutive, add current range and start a new one
+                            ranges.push({ start, end });
+                            start = hours[i];
+                            end = hours[i];
+                          }
+                        }
+                        // Add the last range
+                        ranges.push({ start, end });
+
+                        // Format ranges as strings
+                        const timeRanges = ranges.map((range) => {
+                          if (range.start === range.end) {
+                            return `${range.start}:00`;
+                          }
+                          return `${range.start}:00 to ${range.end + 1}:00`;
+                        });
+
+                        return (
+                          <div key={index} style={{ marginBottom: "4px" }}>
+                            - {dayKey} at {timeRanges.join(", ")}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </p>
+              </div>
+              <div className={styles.modalActions}>
+                <button onClick={confirmBooking}>OK</button>
+                <button onClick={() => setShowModal(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
+        <ToastContainer />
+      </div>
+    </>
   );
 };
 
