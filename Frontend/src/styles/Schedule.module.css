@@ -17,7 +17,7 @@
 }
 
 .container {
-  max-width: 1400px;
+  width: 90vw;
   padding: 30px;
   font-family: Arial, sans-serif;
   background-color: rgba(255, 255, 255, 0.7);
@@ -41,6 +41,7 @@
 
 .filters {
   display: flex;
+  justify-content: center;
   align-items: center;
   gap: 12px;
   border: 1px solid rgba(0, 0, 0, 0.1);
