@@ -34,9 +34,8 @@ export default function LoginUser() {
   const comeTo = location.state?.from?.pathname || "/";
   const handleSubmit = async (event) => {
     event.preventDefault();
-    // Handle login logic here
     try {
-      const result = await login(username, password, "Student");
+      const result = await login(username, password);
 
       console.log("Inside handleSubmit, result: ", result);
       if (result.success) {
