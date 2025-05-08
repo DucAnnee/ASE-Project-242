@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Toolbar,
   AppBar,
@@ -10,34 +10,33 @@ import {
   Tooltip,
   Avatar,
   MenuItem,
+  Divider,
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "../contexts/AuthContext";
 import hcmut_logo from "../assets/HCMUT.png";
+import PersonIcon from "@mui/icons-material/Person";
+import LogoutIcon from "@mui/icons-material/Logout";
+import HomeIcon from "@mui/icons-material/Home";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import HistoryIcon from "@mui/icons-material/History";
+import styles from "../styles/Appbar.module.css";
 
-const pages = [
-  { name: "Đặt lịch", path: "/schedule" },
-  { name: "Lịch sử", path: "/history" },
+// Chỉ hiển thị khi đã đăng nhập
+const authenticatedPages = [
+  { name: "Trang chủ", path: "/home", icon: <HomeIcon /> },
+  { name: "Đặt lịch", path: "/schedule", icon: <CalendarMonthIcon /> },
+  { name: "Lịch sử", path: "/history", icon: <HistoryIcon /> },
 ];
 
 export default function Appbar() {
-  const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const { logout, userInfo } = useAuth();
-  const [isCustomer] = useState(true);
+  const { logout, currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleOpenNavMenu = (event) => {
-    setAnchorElNav(event.currentTarget);
-  };
-
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseNavMenu = () => {
-    setAnchorElNav(null);
   };
 
   const handleCloseUserMenu = () => {
@@ -46,107 +45,71 @@ export default function Appbar() {
 
   const handleLogOut = () => {
     logout();
-    navigate("/login");
+    navigate("/");
+    handleCloseUserMenu();
   };
+
+  // Dữ liệu người dùng demo khi chưa có backend
+  const dummyUser = {
+    name: "Nguyen Vu",
+    avatar: "", // URL ảnh avatar nếu có
+  };
+
+  // Xác định đã đăng nhập hay chưa dựa vào URL thay vì currentUser
+  const isAuthenticated = location.pathname !== "/";
+
   return (
-    <AppBar
-      position="sticky"
-      sx={{
-        backgroundColor: "rgba(255,255,255,0.2)",
-        backdropFilter: "blur(10px)",
-      }}
-    >
-      <Toolbar
-        className="flex justify-between items-center px-6"
-        sx={{
-          display: "display",
-          justifyContent: "center",
-          alignItems: "center",
-          paddingX: 2,
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          {/* Logo and Title */}
+    <AppBar position="sticky" className={styles.appBar}>
+      <Toolbar className={styles.toolbar}>
+        {/* Logo và Navigation */}
+        <Box className={styles.navigationContainer}>
           <Box
             component="img"
             src={hcmut_logo}
             alt="HCMUT LOGO"
-            sx={{
-              height: 50,
-              cursor: "pointer",
-              marginLeft: 3,
-              marginRight: 5,
-            }}
+            className={styles.logo}
             onClick={() => navigate("/")}
           />
 
-          {/* Navigation Buttons */}
-
-          <Box sx={{ display: "flex", gap: 5 }}>
-            {!userInfo || userInfo.role == "Student" ? (
-              <>
-                {pages.map((page, index) => (
-                  <Button
-                    key={index}
-                    variant="text"
-                    sx={{
-                      fontWeight: "bold",
-                      fontSize: "18px",
-                      color: "primary.dark",
-                      backgroundColor: "transparent",
-                      textTransform: "none",
-                      borderRadius: "16px",
-                      paddingX: "24px",
-                      paddingY: "2px",
-                      border:
-                        location.pathname == page.path
-                          ? "2px solid"
-                          : "2px solid transparent",
-                      "&:hover": {
-                        border: "2px solid",
-                        borderColor: "primary.dark",
-                      },
-                    }}
-                    onClick={() => navigate(page.path)}
-                  >
-                    {page.name}
-                  </Button>
-                ))}
-              </>
-            ) : (
-              <></>
-            )}
-          </Box>
+          {/* Menu items */}
+          {isAuthenticated &&
+            authenticatedPages.map((page, index) => (
+              <Button
+                key={index}
+                variant="text"
+                startIcon={page.icon}
+                className={`${styles.navButton} ${
+                  location.pathname === page.path
+                    ? styles.navButtonActive
+                    : styles.navButtonInactive
+                }`}
+                onClick={() => navigate(page.path)}
+              >
+                {page.name}
+              </Button>
+            ))}
         </Box>
 
-        {/* User Menu */}
-        {userInfo ? (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              gap: 2,
-              alignItems: "center",
-            }}
-          >
-            <Typography sx={{ color: "primary.dark" }}>
-              {userInfo.fname ?? userInfo.name}
-            </Typography>
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} className="p-0">
-                <Avatar alt="User" />
+        {/* User Menu or Login Button */}
+        {isAuthenticated ? (
+          <Box>
+            <Tooltip title="Tài khoản">
+              <IconButton onClick={handleOpenUserMenu} className={styles.userMenuButton}>
+                <Avatar
+                  alt={dummyUser.name}
+                  src={dummyUser.avatar}
+                  className={styles.avatar}
+                  sx={{
+                    bgcolor: dummyUser.avatar ? "transparent" : "primary.main",
+                  }}
+                >
+                  {!dummyUser.avatar && dummyUser.name.charAt(0)}
+                </Avatar>
               </IconButton>
             </Tooltip>
 
             <Menu
-              sx={{ mt: "45px" }}
+              className={styles.menu}
               id="menu-appbar"
               anchorEl={anchorElUser}
               anchorOrigin={{
@@ -160,69 +123,45 @@ export default function Appbar() {
               }}
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
+              PaperProps={{
+                elevation: 3,
+                className: styles.menuPaper,
+              }}
             >
-              {/* <MenuItem
-                  key={"dashboard"}
-                  onClick={() => {
-                    handleCloseUserMenu();
-                    { userInfo.role == 'SPSO' ? navigate("/admindashboard") : navigate("/dashboard") }
-                  }}>
-                  <Typography sx={{ textAlign: "center" }}>Dashboard</Typography>
-                </MenuItem> */}
-              {userInfo.role == "SPSO" ? (
-                <>
-                  <MenuItem
-                    key={"printerlogs"}
-                    onClick={() => {
-                      handleCloseUserMenu();
-                      navigate("/print");
-                    }}
-                  >
-                    <Typography sx={{ textAlign: "center" }}>
-                      In tài liệu
-                    </Typography>
-                  </MenuItem>
-                  <MenuItem
-                    key={"printerlogs"}
-                    onClick={() => {
-                      handleCloseUserMenu();
-                      navigate("/buy");
-                    }}
-                  >
-                    <Typography sx={{ textAlign: "center" }}>
-                      Mua trang
-                    </Typography>
-                  </MenuItem>
-                  <MenuItem
-                    key={"printerlogs"}
-                    onClick={() => {
-                      handleCloseUserMenu();
-                      navigate("/printerlogs");
-                    }}
-                  >
-                    <Typography sx={{ textAlign: "center" }}>
-                      Report hệ thống
-                    </Typography>
-                  </MenuItem>
-                </>
-              ) : (
-                <></>
-              )}
-              <MenuItem key={"logout"} onClick={handleLogOut}>
-                <Typography sx={{ textAlign: "center" }}>Đăng xuất</Typography>
+              <MenuItem className={`${styles.menuItem} ${styles.menuItemNoHover}`} disableRipple>
+                <Avatar
+                  alt={dummyUser.name}
+                  src={dummyUser.avatar}
+                  sx={{
+                    bgcolor: dummyUser.avatar ? "transparent" : "primary.main",
+                    width: 40,
+                    height: 40,
+                  }}
+                >
+                  {!dummyUser.avatar && dummyUser.name.charAt(0)}
+                </Avatar>
+                <Box className={styles.userInfo}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    {dummyUser.name}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Giảng viên
+                  </Typography>
+                </Box>
+              </MenuItem>
+
+              <Divider sx={{ my: 1 }} />
+
+              <MenuItem onClick={handleLogOut} className={styles.menuItemLogout}>
+                <LogoutIcon color="error" className={styles.menuItemIcon} />
+                <Typography color="error.main">Đăng xuất</Typography>
               </MenuItem>
             </Menu>
           </Box>
         ) : (
           <Button
             variant="contained"
-            sx={{
-              color: "white",
-              backgroundColor: "primary.main",
-              borderRadius: "14px",
-              marginRight: 3,
-              "&:hover": { backgroundColor: "primary.dark", color: "white" },
-            }}
+            className={styles.loginButton}
             onClick={() => navigate("/login")}
           >
             Đăng nhập
