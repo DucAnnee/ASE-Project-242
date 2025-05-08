@@ -465,3 +465,14 @@
   transform: translateY(0);
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
 }
+
+/* Add to your Schedule.module.css file */
+:global(.Toastify__toast-container) {
+  z-index: 9999;
+  margin-top: 70px; /* Push below nav bar */
+}
+
+:global(.Toastify__toast) {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}

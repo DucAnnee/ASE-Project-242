@@ -4,25 +4,12 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const campuses = {
-  "Lí Thường Kiệt": [
-    "A1",
-    "A2",
-    "A3",
-    "A4",
-    "B1",
-    "B2",
-    "B3",
-    "B4",
-    "C1",
-    "C2",
-    "C3",
-    "C4",
-  ],
+  "Lí Thường Kiệt": ["A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4", "C1", "C2", "C3", "C4"],
   "Dĩ An": ["H1", "H2", "H3", "H4", "H5"],
 };
 
 const rooms = Array.from({ length: 5 }, (_, f) =>
-  Array.from({ length: 5 }, (_, r) => `${f + 1}0${r + 1}`),
+  Array.from({ length: 5 }, (_, r) => `${f + 1}0${r + 1}`)
 ).flat();
 const hours = Array.from({ length: 19 }, (_, i) => `${i + 5}:00`);
 
@@ -68,7 +55,7 @@ const Schedule = () => {
     }
 
     setSelectedSlots((prev) =>
-      prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot],
+      prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot]
     );
   };
 
@@ -107,15 +94,10 @@ const Schedule = () => {
               disabled={!campus}
             >
               <option value="">Chọn Building</option>
-              {campus &&
-                campuses[campus].map((b) => <option key={b}>{b}</option>)}
+              {campus && campuses[campus].map((b) => <option key={b}>{b}</option>)}
             </select>
             <label>Phòng</label>
-            <select
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
-              disabled={!building}
-            >
+            <select value={room} onChange={(e) => setRoom(e.target.value)} disabled={!building}>
               <option value="">Chọn Room</option>
               {rooms.map((r) => (
                 <option key={r}>{r}</option>
@@ -125,14 +107,8 @@ const Schedule = () => {
         </div>
 
         <div className={styles.weekNavButtons}>
-          <button
-            className={styles.prevWeek}
-            onClick={() => setWeekOffset((o) => o - 1)}
-          ></button>
-          <button
-            className={styles.nextWeek}
-            onClick={() => setWeekOffset((o) => o + 1)}
-          ></button>
+          <button className={styles.prevWeek} onClick={() => setWeekOffset((o) => o - 1)}></button>
+          <button className={styles.nextWeek} onClick={() => setWeekOffset((o) => o + 1)}></button>
         </div>
 
         <div className={styles.scheduleWrapper}>
@@ -215,45 +191,43 @@ const Schedule = () => {
                       });
 
                       // Convert grouped slots to readable ranges
-                      return Object.entries(slotsByDay).map(
-                        ([dayKey, hours], index) => {
-                          // Sort hours
-                          hours.sort((a, b) => a - b);
+                      return Object.entries(slotsByDay).map(([dayKey, hours], index) => {
+                        // Sort hours
+                        hours.sort((a, b) => a - b);
 
-                          // Group consecutive hours
-                          const ranges = [];
-                          let start = hours[0];
-                          let end = hours[0];
+                        // Group consecutive hours
+                        const ranges = [];
+                        let start = hours[0];
+                        let end = hours[0];
 
-                          for (let i = 1; i < hours.length; i++) {
-                            if (hours[i] === end + 1) {
-                              // Consecutive hour, extend the range
-                              end = hours[i];
-                            } else {
-                              // Non-consecutive, add current range and start a new one
-                              ranges.push({ start, end });
-                              start = hours[i];
-                              end = hours[i];
-                            }
+                        for (let i = 1; i < hours.length; i++) {
+                          if (hours[i] === end + 1) {
+                            // Consecutive hour, extend the range
+                            end = hours[i];
+                          } else {
+                            // Non-consecutive, add current range and start a new one
+                            ranges.push({ start, end });
+                            start = hours[i];
+                            end = hours[i];
                           }
-                          // Add the last range
-                          ranges.push({ start, end });
+                        }
+                        // Add the last range
+                        ranges.push({ start, end });
 
-                          // Format ranges as strings
-                          const timeRanges = ranges.map((range) => {
-                            if (range.start === range.end) {
-                              return `${range.start}:00`;
-                            }
-                            return `${range.start}:00 to ${range.end + 1}:00`;
-                          });
+                        // Format ranges as strings
+                        const timeRanges = ranges.map((range) => {
+                          if (range.start === range.end) {
+                            return `${range.start}:00`;
+                          }
+                          return `${range.start}:00 to ${range.end + 1}:00`;
+                        });
 
-                          return (
-                            <div key={index} style={{ marginBottom: "4px" }}>
-                              - {dayKey} at {timeRanges.join(", ")}
-                            </div>
-                          );
-                        },
-                      );
+                        return (
+                          <div key={index} style={{ marginBottom: "4px" }}>
+                            - {dayKey} at {timeRanges.join(", ")}
+                          </div>
+                        );
+                      });
                     })()}
                   </div>
                 </p>

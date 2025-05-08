@@ -6,6 +6,7 @@ import LoginUser from "../pages/Login/LoginUser";
 import LoginAdmin from "../pages/Login/LoginAdmin";
 import Schedule from "../pages/Schedule";
 import BookingHistory from "../pages/BookingHistory";
+import Home_User from "../pages/Home_User";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const router = createBrowserRouter([
       {
         path: "/history",
         element: <BookingHistory />,
+      },
+      {
+        path: "/home",
+        element: <Home_User />,
       },
     ],
   },
