@@ -29,6 +29,13 @@ const theme = createTheme({
   typography: {
     fontFamily: "Be Vietnam Pro",
   },
+  components: {
+    MuiPaper: {
+      defaultProps: {
+        elevation: 8,
+      },
+    },
+  },
 });
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -39,5 +46,5 @@ createRoot(document.getElementById("root")).render(
         </ThemeProvider>
       </StyledEngineProvider>
     </AuthProvider>
-  </StrictMode>
+  </StrictMode>,
 );
