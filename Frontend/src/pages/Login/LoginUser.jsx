@@ -14,7 +14,7 @@ import api from "../../api/axios";
 export default function LoginUser() {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const { login } = useAuth();
 
   const [username, setUsername] = useState("");
@@ -43,7 +43,7 @@ export default function LoginUser() {
         console.log("Token after login:", localStorage.getItem("token"));
         console.log(
           "Auth header:",
-          api.defaults.headers.common["Authorization"]
+          api.defaults.headers.common["Authorization"],
         );
         navigate(comeTo, { replace: true });
       }
@@ -64,7 +64,8 @@ export default function LoginUser() {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-      }}>
+      }}
+    >
       <Box
         sx={{
           position: "relative",
@@ -84,7 +85,9 @@ export default function LoginUser() {
           justifyContent: "center",
           alignItems: "center",
           borderRadius: "22px",
-        }}>
+          mt: "10vh",
+        }}
+      >
         <Box
           sx={{
             display: "flex",
@@ -93,7 +96,8 @@ export default function LoginUser() {
             width: "100%",
             height: "30%",
             flexGrow: 1,
-          }}>
+          }}
+        >
           <img src={hcmut_logo} alt="HCMUT LOGO" style={{ height: "100%" }} />
         </Box>
         <Box
@@ -103,12 +107,14 @@ export default function LoginUser() {
             alignItems: "center",
             width: "100%",
             flexGrow: 2,
-          }}>
+          }}
+        >
           <Typography
             color="primary.dark"
             textAlign="center"
             fontSize="18px"
-            fontWeight="bold">
+            fontWeight="bold"
+          >
             Đăng nhập tài khoản HCMUT
           </Typography>
         </Box>
@@ -121,7 +127,8 @@ export default function LoginUser() {
             width: "100%",
             flexGrow: 3,
             flexWrap: "wrap",
-          }}>
+          }}
+        >
           <TextField
             label="Tài khoản"
             variant="outlined"
@@ -169,7 +176,8 @@ export default function LoginUser() {
             alignItems: "center",
             flexFlow: "row wrap",
             flexGrow: 4,
-          }}>
+          }}
+        >
           <Button
             variant="contained"
             sx={{
@@ -185,7 +193,8 @@ export default function LoginUser() {
             }}
             onClick={() => {
               navigate("/login");
-            }}>
+            }}
+          >
             Trở về
           </Button>
           <Button
@@ -202,7 +211,8 @@ export default function LoginUser() {
               fontWeight: "bold",
               boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.25)",
               borderRadius: "10px",
-            }}>
+            }}
+          >
             Đăng nhập
           </Button>
         </Box>
