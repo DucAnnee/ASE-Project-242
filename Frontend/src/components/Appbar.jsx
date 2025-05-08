@@ -16,8 +16,8 @@ import { useAuth } from "../contexts/AuthContext";
 import hcmut_logo from "../assets/HCMUT.png";
 
 const pages = [
-  { name: "Schedule", path: "/schedule" },
-  { name: "History", path: "/history" },
+  { name: "Đặt lịch", path: "/schedule" },
+  { name: "Lịch sử", path: "/history" },
 ];
 
 export default function Appbar() {
@@ -54,7 +54,8 @@ export default function Appbar() {
       sx={{
         backgroundColor: "rgba(255,255,255,0.2)",
         backdropFilter: "blur(10px)",
-      }}>
+      }}
+    >
       <Toolbar
         className="flex justify-between items-center px-6"
         sx={{
@@ -62,14 +63,16 @@ export default function Appbar() {
           justifyContent: "center",
           alignItems: "center",
           paddingX: 2,
-        }}>
+        }}
+      >
         <Box
           sx={{
             display: "flex",
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-          }}>
+          }}
+        >
           {/* Logo and Title */}
           <Box
             component="img"
@@ -111,7 +114,8 @@ export default function Appbar() {
                         borderColor: "primary.dark",
                       },
                     }}
-                    onClick={() => navigate(page.path)}>
+                    onClick={() => navigate(page.path)}
+                  >
                     {page.name}
                   </Button>
                 ))}
@@ -130,7 +134,8 @@ export default function Appbar() {
               flexDirection: "row",
               gap: 2,
               alignItems: "center",
-            }}>
+            }}
+          >
             <Typography sx={{ color: "primary.dark" }}>
               {userInfo.fname ?? userInfo.name}
             </Typography>
@@ -154,7 +159,8 @@ export default function Appbar() {
                 horizontal: "right",
               }}
               open={Boolean(anchorElUser)}
-              onClose={handleCloseUserMenu}>
+              onClose={handleCloseUserMenu}
+            >
               {/* <MenuItem
                   key={"dashboard"}
                   onClick={() => {
@@ -170,7 +176,8 @@ export default function Appbar() {
                     onClick={() => {
                       handleCloseUserMenu();
                       navigate("/print");
-                    }}>
+                    }}
+                  >
                     <Typography sx={{ textAlign: "center" }}>
                       In tài liệu
                     </Typography>
@@ -180,7 +187,8 @@ export default function Appbar() {
                     onClick={() => {
                       handleCloseUserMenu();
                       navigate("/buy");
-                    }}>
+                    }}
+                  >
                     <Typography sx={{ textAlign: "center" }}>
                       Mua trang
                     </Typography>
@@ -190,7 +198,8 @@ export default function Appbar() {
                     onClick={() => {
                       handleCloseUserMenu();
                       navigate("/printerlogs");
-                    }}>
+                    }}
+                  >
                     <Typography sx={{ textAlign: "center" }}>
                       Report hệ thống
                     </Typography>
@@ -214,7 +223,8 @@ export default function Appbar() {
               marginRight: 3,
               "&:hover": { backgroundColor: "primary.dark", color: "white" },
             }}
-            onClick={() => navigate("/login")}>
+            onClick={() => navigate("/login")}
+          >
             Đăng nhập
           </Button>
         )}
