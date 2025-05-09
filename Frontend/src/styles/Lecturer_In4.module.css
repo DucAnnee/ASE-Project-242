@@ -1,0 +1,214 @@
+.pageWrapper {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.pageBackground {
+  min-height: 100vh;
+  width: 100%;
+  background-image: url("../assets/background.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+}
+
+.contentContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1;
+}
+
+.profileCard {
+  width: 100%; /* Increased from 90% */
+  max-width: 1000px; /* Increased from 800px */
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+  padding: 40px; /* Increased from 30px */
+  margin: 20px;
+}
+
+.title {
+  text-align: center;
+  color: #333;
+  margin-bottom: 30px;
+  font-weight: 600;
+  font-size: 28px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.profileSection {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 50px;
+}
+
+.profilePicture {
+  flex: 0 0 150px;
+  display: flex;
+  justify-content: center;
+}
+
+.initialsAvatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: #3498db;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 42px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.infoContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.infoRow {
+  display: flex;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.infoLabel {
+  flex: 0 0 180px;
+  font-weight: 600;
+  color: #555;
+}
+
+.infoValue {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.passwordInputContainer {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.passwordDisplay {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.passwordToggle {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+}
+
+.eyeIcon {
+  color: #6c757d;
+  font-size: 16px;
+  transition: color 0.2s ease;
+}
+
+.eyeIcon:hover {
+  color: #3498db;
+}
+
+.editIcon {
+  cursor: pointer;
+  color: #3498db;
+  margin-left: 10px;
+  font-size: 16px;
+  transition: color 0.2s ease;
+}
+
+.editIcon:hover {
+  color: #2980b9;
+}
+
+.editField {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  align-items: center;
+}
+
+.editInput {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  flex: 1;
+}
+
+.editActions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.saveIcon,
+.cancelIcon {
+  cursor: pointer;
+  font-size: 16px;
+  transition: color 0.2s ease;
+}
+
+.saveIcon {
+  color: #2ecc71;
+}
+
+.saveIcon:hover {
+  color: #27ae60;
+}
+
+.cancelIcon {
+  color: #e74c3c;
+}
+
+.cancelIcon:hover {
+  color: #c0392b;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .profileSection {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .profilePicture {
+    margin-bottom: 20px;
+  }
+
+  .infoRow {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .infoLabel {
+    flex: none;
+  }
+}

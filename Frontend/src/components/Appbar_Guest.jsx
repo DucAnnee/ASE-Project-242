@@ -19,11 +19,13 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import HomeIcon from "@mui/icons-material/Home";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import styles from "../styles/Appbar.module.css";
+import PersonIcon from "@mui/icons-material/Person";
 
 // Chỉ hiển thị cho role Guest
 const guestPages = [
   { name: "Home", path: "/guest", icon: <HomeIcon /> },
   { name: "Calendar", path: "/guest/calender", icon: <CalendarMonthIcon /> },
+  { name: "Information", path: "/guest/information", icon: <PersonIcon /> },
 ];
 
 export default function Appbar_Guest() {

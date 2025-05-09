@@ -27,6 +27,7 @@ const authenticatedPages = [
   { name: "Home", path: "/home", icon: <HomeIcon /> },
   { name: "Schedule", path: "/schedule", icon: <CalendarMonthIcon /> },
   { name: "History", path: "/history", icon: <HistoryIcon /> },
+  { name: "Information", path: "/information", icon: <PersonIcon /> },
 ];
 
 export default function Appbar() {
