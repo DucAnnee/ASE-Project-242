@@ -24,9 +24,9 @@ import styles from "../styles/Appbar.module.css";
 
 // Chỉ hiển thị khi đã đăng nhập
 const authenticatedPages = [
-  { name: "Trang chủ", path: "/home", icon: <HomeIcon /> },
-  { name: "Đặt lịch", path: "/schedule", icon: <CalendarMonthIcon /> },
-  { name: "Lịch sử", path: "/history", icon: <HistoryIcon /> },
+  { name: "Home", path: "/home", icon: <HomeIcon /> },
+  { name: "Schedule", path: "/schedule", icon: <CalendarMonthIcon /> },
+  { name: "History", path: "/history", icon: <HistoryIcon /> },
 ];
 
 export default function Appbar() {
@@ -93,7 +93,7 @@ export default function Appbar() {
         {/* User Menu or Login Button */}
         {isAuthenticated ? (
           <Box>
-            <Tooltip title="Tài khoản">
+            <Tooltip title="Account">
               <IconButton onClick={handleOpenUserMenu} className={styles.userMenuButton}>
                 <Avatar
                   alt={dummyUser.name}
@@ -145,7 +145,7 @@ export default function Appbar() {
                     {dummyUser.name}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Giảng viên
+                    Lecturer
                   </Typography>
                 </Box>
               </MenuItem>
@@ -154,7 +154,7 @@ export default function Appbar() {
 
               <MenuItem onClick={handleLogOut} className={styles.menuItemLogout}>
                 <LogoutIcon color="error" className={styles.menuItemIcon} />
-                <Typography color="error.main">Đăng xuất</Typography>
+                <Typography color="error.main">Log out</Typography>
               </MenuItem>
             </Menu>
           </Box>
@@ -164,7 +164,7 @@ export default function Appbar() {
             className={styles.loginButton}
             onClick={() => navigate("/login")}
           >
-            Đăng nhập
+            Log in
           </Button>
         )}
       </Toolbar>

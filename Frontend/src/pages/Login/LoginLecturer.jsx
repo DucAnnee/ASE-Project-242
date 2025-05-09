@@ -11,7 +11,7 @@ import api from "../../api/axios";
 // const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
 // const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,10}$/;
 
-export default function LoginUser() {
+export default function LoginLecturer() {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -34,16 +34,14 @@ export default function LoginUser() {
   const comeTo = location.state?.from?.pathname || "/";
   const handleSubmit = async (event) => {
     event.preventDefault();
+    // Handle login logic here
     try {
-      const result = await login(username, password);
+      const result = await login(username, password, "Student");
 
       console.log("Inside handleSubmit, result: ", result);
       if (result.success) {
         console.log("Token after login:", localStorage.getItem("token"));
-        console.log(
-          "Auth header:",
-          api.defaults.headers.common["Authorization"],
-        );
+        console.log("Auth header:", api.defaults.headers.common["Authorization"]);
         navigate(comeTo, { replace: true });
       }
     } catch (error) {
@@ -108,13 +106,8 @@ export default function LoginUser() {
             flexGrow: 2,
           }}
         >
-          <Typography
-            color="primary.dark"
-            textAlign="center"
-            fontSize="18px"
-            fontWeight="bold"
-          >
-            Đăng nhập tài khoản HCMUT
+          <Typography color="primary.dark" textAlign="center" fontSize="18px" fontWeight="bold">
+            Login as Lecturer
           </Typography>
         </Box>
         <Divider sx={{ width: "100%" }} />
@@ -194,7 +187,7 @@ export default function LoginUser() {
               navigate("/login");
             }}
           >
-            Trở về
+            Back
           </Button>
           <Button
             onClick={handleSubmit}
@@ -212,7 +205,7 @@ export default function LoginUser() {
               borderRadius: "10px",
             }}
           >
-            Đăng nhập
+            Log in
           </Button>
         </Box>
       </Box>

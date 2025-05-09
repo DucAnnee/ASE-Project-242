@@ -129,6 +129,111 @@
 .slotCell:hover {
   background-color: #e6f7ff;
 }
+/* Thêm vào Schedule.module.css */
+.slotCell {
+  position: relative;
+}
+
+.tooltipContainer {
+  position: absolute;
+  visibility: hidden;
+  opacity: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  border-radius: 6px;
+  padding: 12px;
+  width: 180px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  transition: opacity 0.2s, visibility 0.2s;
+  bottom: calc(100% + 10px); /* Default position - above */
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+}
+
+/* Add to your Schedule.module.css file */
+.tooltipContainer {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+}
+
+.tooltipInfoItem {
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: row; /* Thay đổi từ column thành row */
+  flex-wrap: wrap; /* Cho phép xuống dòng khi cần */
+  align-items: baseline;
+}
+
+.tooltipLabel {
+  font-weight: bold;
+  margin-right: 4px;
+  white-space: nowrap; /* Giữ label luôn trên một dòng */
+}
+
+.tooltipValue {
+  word-break: break-word;
+  flex: 1; /* Cho phép value mở rộng */
+}
+
+/* New class for tooltip positioned below */
+.tooltipContainerBottom {
+  bottom: auto;
+  top: calc(100% + 10px);
+}
+
+.tooltipContainer::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -8px;
+  border-width: 8px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent;
+}
+
+/* Add arrow for bottom tooltip */
+.tooltipContainerBottom::after {
+  top: auto;
+  bottom: 100%;
+  border-color: transparent transparent rgba(0, 0, 0, 0.85) transparent;
+}
+
+.booked:hover .tooltipContainer {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tooltipTitle {
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 15px;
+  color: #90caf9;
+}
+
+.tooltipInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tooltipInfoItem {
+  display: flex;
+  gap: 6px;
+}
+
+.tooltipLabel {
+  font-weight: 500;
+  color: #e0e0e0;
+}
+
+.tooltipValue {
+  color: #fff;
+}
 
 .selected {
   background-color: #90e0ef;

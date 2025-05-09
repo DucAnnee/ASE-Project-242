@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import styles from "../styles/Schedule.module.css";
+import styles from "../../styles/Schedule.module.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -34,6 +34,8 @@ const Schedule = () => {
   const [bookedSlots, setBookedSlots] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
+  // Thêm vào đầu component sau các state
+  const [bookingDetails, setBookingDetails] = useState({});
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
@@ -45,12 +47,12 @@ const Schedule = () => {
     const slot = `${slotDate}-${dayLabel}-${hour}`;
 
     if (bookedSlots.includes(slot)) {
-      toast.warn("Giờ này đã được đặt, không thể thay đổi.");
+      toast.warn("This time has been reserved by someone else and cannot be used.");
       return;
     }
 
     if (!campus || !building || !room) {
-      toast.warn("Vui lòng chọn đủ Campus, Building và Room trước!");
+      toast.warn("Please select Campus, Building and Room first!");
       return;
     }
 
@@ -64,11 +66,26 @@ const Schedule = () => {
     setShowModal(true);
   };
 
+  // Thay đổi hàm confirmBooking để lưu thông tin chi tiết đặt phòng
   const confirmBooking = () => {
     setShowModal(false);
+
+    // Tạo đối tượng thông tin đặt phòng mới
+    const newBookingDetails = {};
+    selectedSlots.forEach((slot) => {
+      newBookingDetails[slot] = {
+        lecturer: "Nguyễn Vũ",
+        subject: "PPL",
+        room: room,
+        building: building,
+        campus: campus,
+      };
+    });
+
     setBookedSlots((prev) => [...prev, ...selectedSlots]);
+    setBookingDetails((prev) => ({ ...prev, ...newBookingDetails }));
     setSelectedSlots([]);
-    toast.success("Đặt lịch thành công!");
+    toast.success("Successfully booked!");
     setCampus("");
     setBuilding("");
     setRoom("");
@@ -80,25 +97,25 @@ const Schedule = () => {
       <div className={styles.container}>
         <div className={styles.header}>
           <div className={styles.filters}>
-            <label>Cơ sở</label>
+            <label>Campus</label>
             <select value={campus} onChange={(e) => setCampus(e.target.value)}>
-              <option value="">Chọn Campus</option>
+              <option value="">Choose Campus</option>
               {Object.keys(campuses).map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>
-            <label>Toà nhà</label>
+            <label>Building</label>
             <select
               value={building}
               onChange={(e) => setBuilding(e.target.value)}
               disabled={!campus}
             >
-              <option value="">Chọn Building</option>
+              <option value="">Choose Building</option>
               {campus && campuses[campus].map((b) => <option key={b}>{b}</option>)}
             </select>
-            <label>Phòng</label>
+            <label>Room</label>
             <select value={room} onChange={(e) => setRoom(e.target.value)} disabled={!building}>
-              <option value="">Chọn Room</option>
+              <option value="">Choose Room</option>
               {rooms.map((r) => (
                 <option key={r}>{r}</option>
               ))}
@@ -129,14 +146,29 @@ const Schedule = () => {
             {hours.map((hour) => (
               <div key={hour} className={styles.row}>
                 <div className={styles.timeCell}>{hour}</div>
+
                 {weekDates.map((d) => {
                   const dayLabel = d.toLocaleDateString("en-US", {
                     weekday: "short",
                   });
-                  const slotDate = `${d.getDate()}/${d.getMonth() + 1}`; // Changed from MM/DD to DD/MM
+                  const slotDate = `${d.getDate()}/${d.getMonth() + 1}`;
                   const slot = `${slotDate}-${dayLabel}-${hour}`;
                   const isSelected = selectedSlots.includes(slot);
                   const isBooked = bookedSlots.includes(slot);
+                  const details = bookingDetails[slot] || {
+                    lecturer: "Nguyễn Vũ",
+                    subject: "PPL",
+                    room: "N/A",
+                    building: "N/A",
+                    campus: "N/A",
+                  };
+                  // Xác định vị trí của tooltip dựa vào giờ
+                  // Nếu là 3 giờ đầu tiên (5:00, 6:00, 7:00) thì hiển thị tooltip ở dưới
+                  const isEarlyHour = parseInt(hour) <= 7;
+                  const tooltipClassName = `${styles.tooltipContainer} ${
+                    isEarlyHour ? styles.tooltipContainerBottom : ""
+                  }`;
+
                   return (
                     <div
                       key={slot}
@@ -144,7 +176,33 @@ const Schedule = () => {
                         isBooked ? styles.booked : ""
                       }`}
                       onClick={() => handleSlotClick(dayLabel, hour, d)}
-                    ></div>
+                    >
+                      {isBooked && (
+                        <div className={tooltipClassName}>
+                          <div className={styles.tooltipTitle}>Infomation</div>
+                          <div className={styles.tooltipInfo}>
+                            <div className={styles.tooltipInfoItem}>
+                              <span className={styles.tooltipLabel}>Lecturer:</span>
+                              <span className={styles.tooltipValue}>{details.lecturer}</span>
+                            </div>
+                            <div className={styles.tooltipInfoItem}>
+                              <span className={styles.tooltipLabel}>Subject:</span>
+                              <span className={styles.tooltipValue}>{details.subject}</span>
+                            </div>
+                            <div className={styles.tooltipInfoItem}>
+                              <span className={styles.tooltipLabel}>Campus:</span>
+                              <span className={styles.tooltipValue}>{details.campus}</span>
+                            </div>
+                            <div className={styles.tooltipInfoItem}>
+                              <span className={styles.tooltipLabel}>Room:</span>
+                              <span className={styles.tooltipValue}>
+                                {details.room} - {details.building}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -153,7 +211,7 @@ const Schedule = () => {
         </div>
 
         <button className={styles.bookButton} onClick={handleBook}>
-          Đặt phòng
+          Book
         </button>
 
         {showModal && (

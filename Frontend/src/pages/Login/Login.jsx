@@ -20,7 +20,8 @@ export default function Login() {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-      }}>
+      }}
+    >
       <Box
         sx={{
           position: "relative",
@@ -41,7 +42,8 @@ export default function Login() {
           alignItems: "center",
           borderRadius: "22px",
           mt: "10vh",
-        }}>
+        }}
+      >
         <Box
           sx={{
             display: "flex",
@@ -51,7 +53,8 @@ export default function Login() {
             height: "40%",
             my: 2,
             flexGrow: 1,
-          }}>
+          }}
+        >
           <img src={hcmut_logo} alt="HCMUT LOGO" style={{ height: "100%" }} />
         </Box>
         <Box
@@ -62,13 +65,10 @@ export default function Login() {
             width: "100%",
             height: "15%",
             flexGrow: 2,
-          }}>
-          <Typography
-            color="primary.dark"
-            textAlign="center"
-            fontSize="16px"
-            fontWeight="bold">
-            Lựa chọn phương thức đăng nhập
+          }}
+        >
+          <Typography color="primary.dark" textAlign="center" fontSize="16px" fontWeight="bold">
+            Choose your role to login
           </Typography>
         </Box>
         <Divider sx={{ width: "100%" }} />
@@ -82,44 +82,55 @@ export default function Login() {
             marginTop: 2,
             flexGrow: 3,
             flexWrap: "wrap",
-          }}>
+          }}
+        >
           <Button
             variant="contained"
-            color="white"
             sx={{
               textTransform: "none",
               width: "100%",
               height: "40%",
-              color: "primary.dark",
+              color: "#000000",
               fontSize: "14px",
               boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.25)",
               borderRadius: "10px",
+              backgroundColor: "#f5f5f5",
+              "&:hover": {
+                backgroundColor: "#3498DB",
+                boxShadow: "0px 0px 8px rgba(25, 118, 210, 0.4)",
+              },
             }}
-            onClick={() => navigate("/login-user")}>
-            {" "}
-            Tài khoản HCMUT (@hcmut.edu.vn)
+            onClick={() => navigate("/login-lecturer")}
+          >
+            Lecturer
           </Button>
           <Button
             variant="contained"
-            color="white"
             sx={{
               textTransform: "none",
               width: "100%",
               height: "40%",
-              color: "primary.dark",
+              color: "#000000",
               fontSize: "14px",
               boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.25)",
               borderRadius: "10px",
+              backgroundColor: "#f5f5f5",
+              "&:hover": {
+                backgroundColor: "#3498DB",
+                boxShadow: "0px 0px 8px rgba(25, 118, 210, 0.4)",
+              },
             }}
-            onClick={() => navigate("/login-admin")}>
-            Admin
+            onClick={() => navigate("/login-guest")}
+          >
+            Guest(Student,Staff,...)
           </Button>
         </Box>
         <Box
           sx={{
             width: "100%",
             height: "10%",
-          }}></Box>
+          }}
+        ></Box>
       </Box>
       <Footer />
     </Box>

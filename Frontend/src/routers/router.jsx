@@ -2,11 +2,13 @@ import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
 import Home from "../pages/Home";
 import Login from "../pages/Login/Login";
-import LoginUser from "../pages/Login/LoginUser";
-import LoginAdmin from "../pages/Login/LoginAdmin";
-import Schedule from "../pages/Schedule";
-import BookingHistory from "../pages/BookingHistory";
-import Home_User from "../pages/Home_User";
+import Schedule from "../pages/Lecturer/Schedule";
+import BookingHistory from "../pages/Lecturer/BookingHistory";
+import Calender from "../pages/Guest/Calender";
+import Home_Lecturer from "../pages/Lecturer/Home_Lecturer";
+import Home_Guest from "../pages/Guest/Home_Guest";
+import LoginGuest from "../pages/Login/LoginGuest";
+import LoginLecturer from "../pages/Login/LoginLecturer";
 
 const router = createBrowserRouter([
   {
@@ -27,7 +29,15 @@ const router = createBrowserRouter([
       },
       {
         path: "/home",
-        element: <Home_User />,
+        element: <Home_Lecturer />,
+      },
+      {
+        path: "/guest/calender",
+        element: <Calender />,
+      },
+      {
+        path: "/guest",
+        element: <Home_Guest />,
       },
     ],
   },
@@ -40,12 +50,12 @@ const router = createBrowserRouter([
     element: <Login />,
   },
   {
-    path: "/login-user",
-    element: <LoginUser />,
+    path: "/login-lecturer",
+    element: <LoginLecturer />,
   },
   {
-    path: "/login-admin",
-    element: <LoginAdmin />,
+    path: "/login-guest",
+    element: <LoginGuest />,
   },
 ]);
 

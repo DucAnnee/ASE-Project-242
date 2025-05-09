@@ -11,7 +11,7 @@ import api from "../../api/axios";
 // const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
 // const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,10}$/;
 
-export default function LoginAdmin() {
+export default function LoginGuest() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -40,10 +40,7 @@ export default function LoginAdmin() {
       console.log("Inside handleSubmit, result: ", result);
       if (result.success) {
         console.log("Token after login:", localStorage.getItem("token"));
-        console.log(
-          "Auth header:",
-          api.defaults.headers.common["Authorization"],
-        );
+        console.log("Auth header:", api.defaults.headers.common["Authorization"]);
         navigate(comeTo, { replace: true });
       }
     } catch (error) {
@@ -108,13 +105,8 @@ export default function LoginAdmin() {
             flexGrow: 2,
           }}
         >
-          <Typography
-            color="primary.dark"
-            textAlign="center"
-            fontSize="18px"
-            fontWeight="bold"
-          >
-            Đăng nhập Admin
+          <Typography color="primary.dark" textAlign="center" fontSize="18px" fontWeight="bold">
+            Login as Guest
           </Typography>
         </Box>
         <Divider sx={{ width: "100%" }} />
@@ -194,7 +186,7 @@ export default function LoginAdmin() {
               navigate("/login");
             }}
           >
-            Trở về
+            Back
           </Button>
           <Button
             onClick={handleSubmit}
@@ -212,7 +204,7 @@ export default function LoginAdmin() {
               borderRadius: "10px",
             }}
           >
-            Đăng nhập
+            Log in
           </Button>
         </Box>
       </Box>

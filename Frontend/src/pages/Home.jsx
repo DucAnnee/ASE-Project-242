@@ -42,24 +42,23 @@ export default function Home() {
   const features = [
     {
       icon: <MeetingRoomIcon fontSize="large" />,
-      title: "Đặt Phòng Dễ Dàng",
-      description: "Chọn phòng học phù hợp với nhu cầu giảng dạy của bạn một cách nhanh chóng.",
+      title: "Easy Booking",
+      description: "Quickly select the classroom that fits your teaching needs.",
     },
     {
       icon: <AccessTimeIcon fontSize="large" />,
-      title: "Tiết Kiệm Thời Gian",
-      description:
-        "Quy trình đặt phòng trực tuyến giúp giảng viên tiết kiệm thời gian và công sức.",
+      title: "Save Time",
+      description: "The online booking process saves lecturers time and effort.",
     },
     {
       icon: <EventNoteIcon fontSize="large" />,
-      title: "Quản Lý Lịch Trình",
-      description: "Theo dõi và quản lý lịch đặt phòng của bạn một cách dễ dàng.",
+      title: "Track your schedule",
+      description: "Help students, staff,... easily track classroom schedules.",
     },
     {
       icon: <CalendarMonthIcon fontSize="large" />,
-      title: "Xem Lịch Sử Đặt Phòng",
-      description: "Truy cập nhanh chóng vào lịch sử đặt phòng của bạn trong quá khứ.",
+      title: "History",
+      description: "Quick access to instructor booking history and customization.",
     },
   ];
 
@@ -128,7 +127,7 @@ export default function Home() {
                 WebkitTextFillColor: "transparent",
               }}
             >
-              Hệ Thống Đặt Phòng Học
+              Room Management System
             </Typography>
             <EventNoteIcon sx={{ fontSize: 48, ml: 2, color: "#1976D2" }} />
           </Box>
@@ -174,7 +173,7 @@ export default function Home() {
               },
             }}
           >
-            ĐẶT NGAY
+            Booking Now
           </Button>
         </Box>
 
@@ -189,7 +188,7 @@ export default function Home() {
             color: "#1565C0",
           }}
         >
-          Tính Năng Nổi Bật
+          Feature Highlights
         </Typography>
         <Grid container spacing={4}>
           {features.map((feature, index) => (
@@ -214,19 +213,19 @@ export default function Home() {
             component="h2"
             sx={{ mb: 3, textAlign: "center", color: "#1565C0" }}
           >
-            Hướng Dẫn Nhanh
+            Quick Guide to Booking
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
               <Card sx={{ display: "flex", flexDirection: "column", height: "100%", boxShadow: 3 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                    Các bước đặt phòng:
+                    Steps to Book a Room:
                   </Typography>
                   <Box component="ol" sx={{ pl: 2 }}>
-                    <li>Chọn cơ sở, tòa nhà và phòng học phù hợp</li>
-                    <li>Chọn ngày và khung giờ mong muốn</li>
-                    <li>Xác nhận thông tin đặt phòng</li>
+                    <li>Choose a facility</li>
+                    <li>Select desired date and time slot</li>
+                    <li>Confirm booking information</li>
                   </Box>
                 </CardContent>
               </Card>
@@ -235,12 +234,12 @@ export default function Home() {
               <Card sx={{ display: "flex", flexDirection: "column", height: "100%", boxShadow: 3 }}>
                 <CardContent>
                   <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
-                    Lưu ý quan trọng:
+                    Important Notes:
                   </Typography>
                   <Box component="ul" sx={{ pl: 2 }}>
-                    <li>Đặt phòng trước ít nhất 24 giờ</li>
-                    <li>Kiểm tra trang web thường xuyên để cập nhật thông tin</li>
-                    <li>Liên hệ hỗ trợ kỹ thuật nếu gặp vấn đề</li>
+                    <li>Book at least 24 hours in advance</li>
+                    <li>Check the website regularly for updates.</li>
+                    <li>Contact technical support if you have any problems.</li>
                   </Box>
                 </CardContent>
               </Card>

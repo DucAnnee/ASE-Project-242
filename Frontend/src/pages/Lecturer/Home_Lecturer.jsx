@@ -3,11 +3,11 @@ import { Box } from "@mui/material";
 import styled from "@emotion/styled";
 
 // Ảnh background - sửa cách import
-import anhTruong1 from "../assets/ảnh trường.png";
-import anhTruong2 from "../assets/home.png";
-import anhTruong3 from "../assets/lịch.png";
-import anhTruong4 from "../assets/Sân.png";
-import anhTruong5 from "../assets/calen.png";
+import anhTruong1 from "../../assets/ảnh trường.png";
+import anhTruong2 from "../../assets/home.png";
+import anhTruong3 from "../../assets/lịch.png";
+import anhTruong4 from "../../assets/Sân.png";
+import anhTruong5 from "../../assets/calen.png";
 
 const FullScreenContainer = styled(Box)`
   position: fixed;
@@ -30,7 +30,7 @@ const BackgroundImage = styled(Box)`
   transition: opacity 1.5s ease-in-out;
 `;
 
-export default function Home_User() {
+export default function Home_Lecturer() {
   const [activeIndex, setActiveIndex] = useState(0);
   const backgroundImages = [anhTruong1, anhTruong2, anhTruong3, anhTruong4, anhTruong5];
 
