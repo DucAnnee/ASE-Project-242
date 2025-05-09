@@ -90,7 +90,7 @@ export default function Appbar() {
             ))}
         </Box>
 
-        {/* User Menu or Login Button */}
+        {/* User Menu or Login/Signup Buttons */}
         {isAuthenticated ? (
           <Box>
             <Tooltip title="Account">
@@ -159,13 +159,30 @@ export default function Appbar() {
             </Menu>
           </Box>
         ) : (
-          <Button
-            variant="contained"
-            className={styles.loginButton}
-            onClick={() => navigate("/login")}
-          >
-            Log in
-          </Button>
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <Button
+              variant="outlined"
+              className={styles.signupButton}
+              onClick={() => navigate("/signup")}
+              sx={{
+                borderColor: "#1976d2",
+                color: "#1976d2",
+                "&:hover": {
+                  borderColor: "#1565c0",
+                  backgroundColor: "rgba(25, 118, 210, 0.04)",
+                },
+              }}
+            >
+              Sign up
+            </Button>
+            <Button
+              variant="contained"
+              className={styles.loginButton}
+              onClick={() => navigate("/login")}
+            >
+              Log in
+            </Button>
+          </Box>
         )}
       </Toolbar>
     </AppBar>

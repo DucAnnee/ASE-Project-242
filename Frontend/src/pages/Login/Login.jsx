@@ -129,8 +129,30 @@ export default function Login() {
           sx={{
             width: "100%",
             height: "10%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            mt: 1,
           }}
-        ></Box>
+        >
+          <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+            Don't have an account?
+          </Typography>
+          <Typography
+            variant="body2"
+            color="primary"
+            sx={{
+              cursor: "pointer",
+              fontWeight: "bold",
+              "&:hover": {
+                textDecoration: "underline",
+              },
+            }}
+            onClick={() => navigate("/signup")}
+          >
+            Register here
+          </Typography>
+        </Box>
       </Box>
       <Footer />
     </Box>

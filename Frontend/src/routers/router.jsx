@@ -9,6 +9,7 @@ import Home_Lecturer from "../pages/Lecturer/Home_Lecturer";
 import Home_Guest from "../pages/Guest/Home_Guest";
 import LoginGuest from "../pages/Login/LoginGuest";
 import LoginLecturer from "../pages/Login/LoginLecturer";
+import Signup from "../pages/Signup/Signup";
 
 const router = createBrowserRouter([
   {
@@ -56,6 +57,10 @@ const router = createBrowserRouter([
   {
     path: "/login-guest",
     element: <LoginGuest />,
+  },
+  {
+    path: "/signup",
+    element: <Signup />,
   },
 ]);
 

@@ -121,7 +121,7 @@ export default function LoginGuest() {
           }}
         >
           <TextField
-            label="Tài khoản"
+            label="User name"
             variant="outlined"
             fullWidth
             value={username}
@@ -140,7 +140,7 @@ export default function LoginGuest() {
             onChange={handleUsernameChange}
           />
           <TextField
-            label="Mật khẩu"
+            label="Password"
             variant="outlined"
             type="password"
             fullWidth
