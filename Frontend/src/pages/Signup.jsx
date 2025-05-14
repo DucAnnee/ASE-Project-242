@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Box from "@mui/material/Box";
+import api from "../api/axios";
 import {
   Button,
   Divider,
@@ -15,24 +16,22 @@ import {
   InputAdornment,
   IconButton,
 } from "@mui/material";
-import bg from "../../assets/bg.png";
-import hcmut_logo from "../../assets/HCMUT.png";
+import bg from "../assets/bg.png";
+import hcmut_logo from "../assets/HCMUT.png";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 export default function Signup() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  // Initialize with empty strings to avoid the overlap issue
   const [formData, setFormData] = useState({
     username: "",
-    password: "",
-    confirmPassword: "",
-    role: "Guest",
-    email: "",
-    phone: "",
     firstName: "",
     lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    role: "Guest",
   });
 
   const handleChange = (e) => {
@@ -42,11 +41,35 @@ export default function Signup() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Form validation and submission logic would go here
-    console.log(formData);
-    // navigate("/login");
+
+    if (formData.password !== formData.confirmPassword) {
+      return;
+    }
+
+    try {
+      const payload = {
+        username: formData.username,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone_num: formData.phone,
+        hashed_password: formData.password,
+        role: formData.role.toLowerCase(),
+      };
+      console.log("Payload:", payload);
+
+      const res = await api.post("api/auth/signup", payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      console.log("Signup success:", res.data);
+      navigate("/login", { replace: true });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -61,8 +84,7 @@ export default function Signup() {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-      }}
-    >
+      }}>
       <Paper
         elevation={4}
         sx={{
@@ -79,20 +101,23 @@ export default function Signup() {
           flexDirection: "column",
           borderRadius: "22px",
           my: 5,
-        }}
-      >
+        }}>
         <Box
           sx={{
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             mb: 3,
-          }}
-        >
+          }}>
           <img src={hcmut_logo} alt="HCMUT LOGO" style={{ height: "100px" }} />
         </Box>
 
-        <Typography variant="h5" color="primary.dark" textAlign="center" fontWeight="bold" mb={2}>
+        <Typography
+          variant="h5"
+          color="primary.dark"
+          textAlign="center"
+          fontWeight="bold"
+          mb={2}>
           Create New Account
         </Typography>
 
@@ -104,8 +129,7 @@ export default function Signup() {
               display: "grid",
               gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
               gap: 3,
-            }}
-          >
+            }}>
             {/* Fixed TextField to properly show the label and input */}
             <TextField
               label="First Name"
@@ -177,10 +201,20 @@ export default function Signup() {
               sx={{ width: "210%", maxWidth: "1500px" }}
             />
 
-            <FormControl component="fieldset" sx={{ gridColumn: { sm: "1 / span 2" } }}>
+            <FormControl
+              component="fieldset"
+              sx={{ gridColumn: { sm: "1 / span 2" } }}>
               <FormLabel component="legend">Role</FormLabel>
-              <RadioGroup row name="role" value={formData.role} onChange={handleChange}>
-                <FormControlLabel value="Lecturer" control={<Radio />} label="Lecturer" />
+              <RadioGroup
+                row
+                name="role"
+                value={formData.role}
+                onChange={handleChange}>
+                <FormControlLabel
+                  value="Lecturer"
+                  control={<Radio />}
+                  label="Lecturer"
+                />
                 <FormControlLabel
                   value="Guest"
                   control={<Radio />}
@@ -206,7 +240,9 @@ export default function Signup() {
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end">
                       {showPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
@@ -231,9 +267,10 @@ export default function Signup() {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      edge="end"
-                    >
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      edge="end">
                       {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                     </IconButton>
                   </InputAdornment>
@@ -251,8 +288,7 @@ export default function Signup() {
                 py: 1.5,
                 borderRadius: "10px",
               }}
-              onClick={() => navigate("/")}
-            >
+              onClick={() => navigate("/")}>
               Back to Home
             </Button>
 
@@ -268,8 +304,7 @@ export default function Signup() {
                 "&:hover": {
                   backgroundColor: "#1565c0",
                 },
-              }}
-            >
+              }}>
               Sign Up
             </Button>
           </Box>

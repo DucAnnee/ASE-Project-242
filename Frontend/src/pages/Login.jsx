@@ -1,17 +1,18 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import Footer from "../../components/Footer";
+import Footer from "../components/Footer";
 import Box from "@mui/material/Box";
 import { Button, Divider, TextField, Typography } from "@mui/material";
-import bg from "../../assets/bg.png";
-import hcmut_logo from "../../assets/HCMUT.png";
-import { useAuth } from "../../contexts/AuthContext";
-import api from "../../api/axios";
+import bg from "../assets/bg.png";
+import hcmut_logo from "../assets/HCMUT.png";
+import { useAuth } from "../contexts/AuthContext";
+import api from "../api/axios";
+import { toast } from "react-toastify";
 
 // const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
 // const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,10}$/;
 
-export default function LoginGuest() {
+export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -33,18 +34,27 @@ export default function LoginGuest() {
   const comeTo = location.state?.from?.pathname || "/";
   const handleSubmit = async (event) => {
     event.preventDefault();
-    // Handle login logic here
     try {
-      const result = await login(username, password, "SPSO");
+      const result = await login(username, password);
+      if (result.response?.status === 400) {
+        toast.warn("Your username or password is incorrect, please try again.");
+      }
 
       console.log("Inside handleSubmit, result: ", result);
+
       if (result.success) {
         console.log("Token after login:", localStorage.getItem("token"));
-        console.log("Auth header:", api.defaults.headers.common["Authorization"]);
+        console.log(
+          "Auth header:",
+          api.defaults.headers.common["Authorization"]
+        );
         navigate(comeTo, { replace: true });
       }
     } catch (error) {
-      console.error("Login failed: ", error);
+      // if (error.response?.status === 400) {
+      //   console.log("Your username or password is incorrect, please try again.");
+      // }
+      console.log("Login failed: ", error);
     }
   };
 
@@ -60,8 +70,7 @@ export default function LoginGuest() {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-      }}
-    >
+      }}>
       <Box
         sx={{
           position: "relative",
@@ -82,8 +91,7 @@ export default function LoginGuest() {
           alignItems: "center",
           borderRadius: "22px",
           mt: "10vh",
-        }}
-      >
+        }}>
         <Box
           sx={{
             display: "flex",
@@ -92,8 +100,7 @@ export default function LoginGuest() {
             width: "100%",
             height: "30%",
             flexGrow: 1,
-          }}
-        >
+          }}>
           <img src={hcmut_logo} alt="HCMUT LOGO" style={{ height: "100%" }} />
         </Box>
         <Box
@@ -103,10 +110,13 @@ export default function LoginGuest() {
             alignItems: "center",
             width: "100%",
             flexGrow: 2,
-          }}
-        >
-          <Typography color="primary.dark" textAlign="center" fontSize="18px" fontWeight="bold">
-            Login as Guest
+          }}>
+          <Typography
+            color="primary.dark"
+            textAlign="center"
+            fontSize="18px"
+            fontWeight="bold">
+            Login to SCAMS
           </Typography>
         </Box>
         <Divider sx={{ width: "100%" }} />
@@ -118,8 +128,7 @@ export default function LoginGuest() {
             width: "100%",
             flexGrow: 3,
             flexWrap: "wrap",
-          }}
-        >
+          }}>
           <TextField
             label="User name"
             variant="outlined"
@@ -167,8 +176,7 @@ export default function LoginGuest() {
             alignItems: "center",
             flexFlow: "row wrap",
             flexGrow: 4,
-          }}
-        >
+          }}>
           <Button
             variant="contained"
             sx={{
@@ -183,9 +191,8 @@ export default function LoginGuest() {
               borderRadius: "10px",
             }}
             onClick={() => {
-              navigate("/login");
-            }}
-          >
+              navigate("/");
+            }}>
             Back
           </Button>
           <Button
@@ -202,8 +209,7 @@ export default function LoginGuest() {
               fontWeight: "bold",
               boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.25)",
               borderRadius: "10px",
-            }}
-          >
+            }}>
             Log in
           </Button>
         </Box>
