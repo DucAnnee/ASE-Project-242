@@ -41,6 +41,15 @@ export default function Signup() {
     });
   };
 
+  const normalizeRole = (role) => {
+    switch (role) {
+      case "Lecturer":
+        return "teacher";
+      case "Guest":
+        return "guest";
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -56,7 +65,7 @@ export default function Signup() {
         email: formData.email,
         phone_num: formData.phone,
         hashed_password: formData.password,
-        role: formData.role.toLowerCase(),
+        role: normalizeRole(formData.role),
       };
       console.log("Payload:", payload);
 
