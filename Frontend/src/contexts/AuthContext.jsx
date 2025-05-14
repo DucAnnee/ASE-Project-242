@@ -33,10 +33,18 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       console.log("Attempting login with:", { username, password });
-      const response = await api.post("/login", {
-        username,
-        password,
-      });
+      const response = await api.post(
+        "/api/auth/login",
+        {
+          username,
+          password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       console.log("Login response:", response.data);
 
@@ -45,7 +53,7 @@ export const AuthProvider = ({ children }) => {
       if (!token || !user || !message) {
         console.error(
           "Missing token or user_data or message in response:",
-          response.data,
+          response.data
         );
         throw new Error("Invalid response data");
       }
@@ -88,8 +96,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!userInfo,
         isStudent: userInfo?.role === "student",
         isTeacher: userInfo?.role === "teacher",
-      }}
-    >
+      }}>
       {children}
     </AuthContext.Provider>
   );
