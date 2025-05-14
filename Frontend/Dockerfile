@@ -1,4 +1,20 @@
-FROM node:18-alpine as build
+# ---------- Dev stage ----------
+FROM node:18-alpine AS dev
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+COPY . .
+
+ENV HOST=0.0.0.0         
+ENV CHOKIDAR_USEPOLLING=true
+
+EXPOSE 5173               
+CMD ["npm", "run", "dev"]
+
+# ---------- Prod build ----------
+
+FROM node:18-alpine AS build
 
 WORKDIR /app
 COPY package*.json ./
