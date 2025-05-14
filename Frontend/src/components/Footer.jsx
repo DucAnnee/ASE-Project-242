@@ -26,7 +26,6 @@ const Footer = () => {
     >
       <Grid container direction="row" width="100%">
         <Grid
-          item
           size={4}
           sx={{
             display: "flex",
@@ -48,7 +47,6 @@ const Footer = () => {
           </Box>
         </Grid>
         <Grid
-          item
           size={4}
           sx={{
             display: "flex",
@@ -65,7 +63,6 @@ const Footer = () => {
           </Box>
         </Grid>
         <Grid
-          item
           size={4}
           sx={{
             display: "flex",
