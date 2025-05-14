@@ -1,20 +1,36 @@
-import React, { useState } from "react";
-import styles from "../../styles/Lecturer_In4.module.css";
+import React, { useState, useEffect } from "react";
+import styles from "../styles/Lecturer_In4.module.css";
 import { FaEdit, FaCheck, FaTimes, FaEye, FaEyeSlash } from "react-icons/fa";
 import { Modal, Button } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { useAuth } from "../contexts/AuthContext";
 
-const Lecturer_In4 = () => {
-  // Sample user data (placeholder until connected to backend)
+const UserInfo = () => {
+  const { userInfo } = useAuth();
+
   const [userData, setUserData] = useState({
-    firstName: "Nguyễn",
-    lastName: "Paul",
-    username: "paul",
-    password: "password123",
-    role: "Lecturer",
-    phoneNumber: "0339983769",
-    email: "paul@uhcmut.edu.vn",
+    firstName: "",
+    lastName: "",
+    username: "",
+    password: "",
+    role: "",
+    phoneNumber: "",
+    email: "",
   });
+
+  useEffect(() => {
+    if (userInfo) {
+      setUserData({
+        firstName: userInfo.first_name || "",
+        lastName: userInfo.last_name || "",
+        username: userInfo.username || "",
+        password: "********", 
+        role: userInfo.role || "guest",
+        phoneNumber: userInfo.phone_num || "",
+        email: userInfo.email || "",
+      });
+    }
+  }, [userInfo]);
 
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [isEditingEmail, setIsEditingEmail] = useState(false);
@@ -38,11 +54,8 @@ const Lecturer_In4 = () => {
   };
 
   const handleCancelEdit = (field) => {
-    if (field === "password") {
-      setIsEditingPassword(false);
-    } else if (field === "email") {
-      setIsEditingEmail(false);
-    }
+    if (field === "password") setIsEditingPassword(false);
+    if (field === "email") setIsEditingEmail(false);
   };
 
   const handleSaveEdit = (field) => {
@@ -50,7 +63,8 @@ const Lecturer_In4 = () => {
       setCurrentEditing("password");
       setCurrentNewValue(newPassword);
       setShowConfirmModal(true);
-    } else if (field === "email" && newEmail) {
+    }
+    if (field === "email" && newEmail) {
       setCurrentEditing("email");
       setCurrentNewValue(newEmail);
       setShowConfirmModal(true);
@@ -61,53 +75,54 @@ const Lecturer_In4 = () => {
     if (currentEditing === "password") {
       setUserData({ ...userData, password: currentNewValue });
       setIsEditingPassword(false);
-    } else if (currentEditing === "email") {
+    }
+    if (currentEditing === "email") {
       setUserData({ ...userData, email: currentNewValue });
       setIsEditingEmail(false);
     }
     setShowConfirmModal(false);
   };
 
-  const toggleShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
+  const toggleShowPassword = () => setShowPassword(!showPassword);
+  const toggleShowNewPassword = () => setShowNewPassword(!showNewPassword);
 
-  const toggleShowNewPassword = () => {
-    setShowNewPassword(!showNewPassword);
-  };
+  const initials = `${userData.firstName.charAt(0) || ""}${userData.lastName.charAt(0) || ""}`;
+  const titleRole =
+    userData.role.charAt(0).toUpperCase() + userData.role.slice(1);
 
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.pageBackground}></div>
       <div className={styles.contentContainer}>
         <div className={styles.profileCard}>
-          <h1 className={styles.title}>Lecturer Information</h1>
+          <h1 className={styles.title}>{titleRole} Information</h1>
 
           <div className={styles.profileSection}>
             <div className={styles.profilePicture}>
-              {/* Default profile picture with initials */}
-              <div className={styles.initialsAvatar}>
-                {userData.firstName[0]}
-                {userData.lastName[0]}
-              </div>
+              {/* Initials avatar */}
+              <div className={styles.initialsAvatar}>{initials}</div>
             </div>
 
             <div className={styles.infoContainer}>
+              {/* First name */}
               <div className={styles.infoRow}>
                 <div className={styles.infoLabel}>First Name:</div>
                 <div className={styles.infoValue}>{userData.firstName}</div>
               </div>
 
+              {/* Last name */}
               <div className={styles.infoRow}>
                 <div className={styles.infoLabel}>Last Name:</div>
                 <div className={styles.infoValue}>{userData.lastName}</div>
               </div>
 
+              {/* Username */}
               <div className={styles.infoRow}>
                 <div className={styles.infoLabel}>Username:</div>
                 <div className={styles.infoValue}>{userData.username}</div>
               </div>
 
+              {/* Password (masked) */}
               <div className={styles.infoRow}>
                 <div className={styles.infoLabel}>Password:</div>
                 <div className={styles.infoValue}>
@@ -121,7 +136,10 @@ const Lecturer_In4 = () => {
                           className={styles.editInput}
                           placeholder="Enter new password"
                         />
-                        <div className={styles.passwordToggle} onClick={toggleShowNewPassword}>
+                        <div
+                          className={styles.passwordToggle}
+                          onClick={toggleShowNewPassword}
+                        >
                           {showNewPassword ? (
                             <FaEyeSlash className={styles.eyeIcon} />
                           ) : (
@@ -143,8 +161,13 @@ const Lecturer_In4 = () => {
                   ) : (
                     <>
                       <div className={styles.passwordDisplay}>
-                        <span>{showPassword ? userData.password : "••••••••"}</span>
-                        <div className={styles.passwordToggle} onClick={toggleShowPassword}>
+                        <span>
+                          {showPassword ? userData.password : "••••••••"}
+                        </span>
+                        <div
+                          className={styles.passwordToggle}
+                          onClick={toggleShowPassword}
+                        >
                           {showPassword ? (
                             <FaEyeSlash className={styles.eyeIcon} />
                           ) : (
@@ -152,22 +175,28 @@ const Lecturer_In4 = () => {
                           )}
                         </div>
                       </div>
-                      <FaEdit className={styles.editIcon} onClick={handleEditPassword} />
+                      <FaEdit
+                        className={styles.editIcon}
+                        onClick={handleEditPassword}
+                      />
                     </>
                   )}
                 </div>
               </div>
 
+              {/* Role */}
               <div className={styles.infoRow}>
                 <div className={styles.infoLabel}>Role:</div>
-                <div className={styles.infoValue}>{userData.role}</div>
+                <div className={styles.infoValue}>{titleRole}</div>
               </div>
 
+              {/* Phone */}
               <div className={styles.infoRow}>
                 <div className={styles.infoLabel}>Phone Number:</div>
                 <div className={styles.infoValue}>{userData.phoneNumber}</div>
               </div>
 
+              {/* Email */}
               <div className={styles.infoRow}>
                 <div className={styles.infoLabel}>Email:</div>
                 <div className={styles.infoValue}>
@@ -194,7 +223,10 @@ const Lecturer_In4 = () => {
                   ) : (
                     <>
                       <span>{userData.email}</span>
-                      <FaEdit className={styles.editIcon} onClick={handleEditEmail} />
+                      <FaEdit
+                        className={styles.editIcon}
+                        onClick={handleEditEmail}
+                      />
                     </>
                   )}
                 </div>
@@ -205,13 +237,22 @@ const Lecturer_In4 = () => {
       </div>
 
       {/* Confirmation Modal */}
-      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
+      <Modal
+        show={showConfirmModal}
+        onHide={() => setShowConfirmModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>Confirm Changes</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you sure you want to update your {currentEditing}?</Modal.Body>
+        <Modal.Body>
+          Are you sure you want to update your {currentEditing}?
+        </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowConfirmModal(false)}
+          >
             Cancel
           </Button>
           <Button variant="primary" onClick={confirmEdit}>
@@ -223,4 +264,4 @@ const Lecturer_In4 = () => {
   );
 };
 
-export default Lecturer_In4;
+export default UserInfo;
