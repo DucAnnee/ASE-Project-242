@@ -44,7 +44,7 @@ export default function Appbar() {
   const isAuthenticated = Boolean(userInfo);
   const role = userInfo?.role?.toLowerCase() || "guest"; // default to guest
 
-  const navigation = role === "lecturer" ? NAV_LECTURER : NAV_GUEST;
+  const navigation = role === "teacher" ? NAV_LECTURER : NAV_GUEST;
 
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
