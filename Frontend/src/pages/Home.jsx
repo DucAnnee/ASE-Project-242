@@ -37,7 +37,15 @@ const IconWrapper = styled("div")(({ theme }) => ({
 
 export default function Home() {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { userInfo } = useAuth();
+
+  function handleBookNowClick() {
+    if (userInfo) {
+      navigate("/schedule");
+    } else {
+      navigate("/login");
+    }
+  };
 
   const features = [
     {
@@ -160,7 +168,7 @@ export default function Home() {
           <Button
             variant="contained"
             size="large"
-            onClick={() => navigate("/login")}
+            onClick={() => handleBookNowClick()}
             startIcon={<CalendarMonthIcon />}
             endIcon={<MeetingRoomIcon />}
             sx={{
@@ -173,7 +181,7 @@ export default function Home() {
               },
             }}
           >
-            Booking Now
+            Book Now!
           </Button>
         </Box>
 
