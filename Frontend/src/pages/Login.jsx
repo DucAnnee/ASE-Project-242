@@ -7,7 +7,8 @@ import bg from "../assets/bg.png";
 import hcmut_logo from "../assets/HCMUT.png";
 import { useAuth } from "../contexts/AuthContext";
 import api from "../api/axios";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
 // const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,10}$/;
@@ -36,7 +37,7 @@ export default function Login() {
     event.preventDefault();
     try {
       const result = await login(username, password);
-      if (result.response?.status === 400) {
+      if (result.error === "Invalid credentials") {
         toast.warn("Your username or password is incorrect, please try again.");
       }
 
@@ -51,9 +52,6 @@ export default function Login() {
         navigate(comeTo, { replace: true });
       }
     } catch (error) {
-      // if (error.response?.status === 400) {
-      //   console.log("Your username or password is incorrect, please try again.");
-      // }
       console.log("Login failed: ", error);
     }
   };
@@ -170,6 +168,32 @@ export default function Login() {
         </Box>
         <Box
           sx={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            width: "100%",
+            flexGrow: 1,
+            flexWrap: "wrap",
+          }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mr: 1 }}>
+            Don't have an account?
+          </Typography>
+          <Typography
+            variant="body2"
+            color="primary"
+            sx={{
+              cursor: "pointer",
+              fontWeight: "bold",
+              "&:hover": {
+                textDecoration: "underline",
+              },
+            }}
+            onClick={() => navigate("/signup")}>
+            Register here
+          </Typography>
+        </Box>
+        <Box
+          sx={{
             width: "100%",
             display: "flex",
             justifyContent: "space-between",
@@ -215,6 +239,7 @@ export default function Login() {
         </Box>
       </Box>
       <Footer />
+      <ToastContainer />
     </Box>
   );
 }
