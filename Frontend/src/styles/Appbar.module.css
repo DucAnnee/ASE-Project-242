@@ -43,18 +43,18 @@
 }
 
 .navButtonActive {
-  color: #1976d2;
-  border: 2px solid #1976d2;
+  color: #1488DB;
+  border: 2px solid #1488DB;
 }
 
 .navButtonInactive {
-  color: rgba(0, 0, 0, 0.87);
+  color: #083657;
   border: 2px solid transparent;
 }
 
 .navButton:hover {
   background-color: rgba(25, 118, 210, 0.04);
-  border-color: rgba(25, 118, 210, 0.5);
+  border-color: #1488DB;
 }
 
 /* User Menu */

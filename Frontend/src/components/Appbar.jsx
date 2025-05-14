@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Toolbar,
   AppBar,
@@ -22,27 +22,35 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import HistoryIcon from "@mui/icons-material/History";
 import styles from "../styles/Appbar.module.css";
 
-// Chỉ hiển thị khi đã đăng nhập
-const authenticatedPages = [
-  { name: "Home", path: "/home", icon: <HomeIcon /> },
+const NAV_GUEST = [
+  // { name: "Home", path: "/home", icon: <HomeIcon /> },
+  { name: "Schedule", path: "/schedule", icon: <CalendarMonthIcon /> },
+  { name: "Information", path: "/information", icon: <PersonIcon /> },
+];
+
+const NAV_LECTURER = [
+  // { name: "Home", path: "/home", icon: <HomeIcon /> },
   { name: "Schedule", path: "/schedule", icon: <CalendarMonthIcon /> },
   { name: "History", path: "/history", icon: <HistoryIcon /> },
   { name: "Information", path: "/information", icon: <PersonIcon /> },
 ];
 
 export default function Appbar() {
-  const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const { logout, currentUser } = useAuth();
+  const [anchorElUser, setAnchorElUser] = useState(null);
+  const { logout, userInfo } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isAuthenticated = Boolean(userInfo);
+  const role = userInfo?.role?.toLowerCase() || "guest"; // default to guest
+
+  const navigation = role === "lecturer" ? NAV_LECTURER : NAV_GUEST;
 
   const handleOpenUserMenu = (event) => {
     setAnchorElUser(event.currentTarget);
   };
 
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
+  const handleCloseUserMenu = () => setAnchorElUser(null);
 
   const handleLogOut = () => {
     logout();
@@ -50,19 +58,28 @@ export default function Appbar() {
     handleCloseUserMenu();
   };
 
-  // Dữ liệu người dùng demo khi chưa có backend
-  const dummyUser = {
-    name: "Nguyen Vu",
-    avatar: "", // URL ảnh avatar nếu có
-  };
+  const renderNav = () =>
+    navigation.map((page) => (
+      <Button
+        key={page.path}
+        variant="text"
+        startIcon={page.icon}
+        className={`${styles.navButton} ${
+          location.pathname === page.path
+            ? styles.navButtonActive
+            : styles.navButtonInactive
+        }`}
+        onClick={() => navigate(page.path)}>
+        {page.name}
+      </Button>
+    ));
 
-  // Xác định đã đăng nhập hay chưa dựa vào URL thay vì currentUser
-  const isAuthenticated = location.pathname !== "/";
+  const firstLetter = userInfo?.first_name?.charAt(0)?.toUpperCase() || "?";
 
   return (
     <AppBar position="sticky" className={styles.appBar}>
       <Toolbar className={styles.toolbar}>
-        {/* Logo và Navigation */}
+        {/* Logo & Navigation Container */}
         <Box className={styles.navigationContainer}>
           <Box
             component="img"
@@ -72,88 +89,48 @@ export default function Appbar() {
             onClick={() => navigate("/")}
           />
 
-          {/* Menu items */}
-          {isAuthenticated &&
-            authenticatedPages.map((page, index) => (
-              <Button
-                key={index}
-                variant="text"
-                startIcon={page.icon}
-                className={`${styles.navButton} ${
-                  location.pathname === page.path
-                    ? styles.navButtonActive
-                    : styles.navButtonInactive
-                }`}
-                onClick={() => navigate(page.path)}
-              >
-                {page.name}
-              </Button>
-            ))}
+          {/* Nav buttons (authenticated only) */}
+          {isAuthenticated && renderNav()}
         </Box>
 
-        {/* User Menu or Login/Signup Buttons */}
+        {/* Right‑hand side: user menu or login/signup */}
         {isAuthenticated ? (
           <Box>
-            <Tooltip title="Account">
-              <IconButton onClick={handleOpenUserMenu} className={styles.userMenuButton}>
-                <Avatar
-                  alt={dummyUser.name}
-                  src={dummyUser.avatar}
-                  className={styles.avatar}
-                  sx={{
-                    bgcolor: dummyUser.avatar ? "transparent" : "primary.main",
-                  }}
-                >
-                  {!dummyUser.avatar && dummyUser.name.charAt(0)}
-                </Avatar>
+            <Tooltip title="Account settings">
+              <IconButton
+                onClick={handleOpenUserMenu}
+                className={styles.userMenuButton}>
+                <Avatar className={styles.avatar}>{firstLetter}</Avatar>
               </IconButton>
             </Tooltip>
 
             <Menu
-              className={styles.menu}
-              id="menu-appbar"
+              id="user-menu"
               anchorEl={anchorElUser}
-              anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
-              }}
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
-              PaperProps={{
-                elevation: 3,
-                className: styles.menuPaper,
-              }}
-            >
-              <MenuItem className={`${styles.menuItem} ${styles.menuItemNoHover}`} disableRipple>
-                <Avatar
-                  alt={dummyUser.name}
-                  src={dummyUser.avatar}
-                  sx={{
-                    bgcolor: dummyUser.avatar ? "transparent" : "primary.main",
-                    width: 40,
-                    height: 40,
-                  }}
-                >
-                  {!dummyUser.avatar && dummyUser.name.charAt(0)}
-                </Avatar>
-                <Box className={styles.userInfo}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                    {dummyUser.name}
+              anchorOrigin={{ vertical: "top", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+              PaperProps={{ elevation: 3, className: styles.menuPaper }}>
+              <MenuItem
+                disableRipple
+                className={`${styles.menuItem} ${styles.menuItemNoHover}`}>
+                <Avatar sx={{ mr: 1 }}>{firstLetter}</Avatar>
+                <Box>
+                  <Typography fontWeight={600}>
+                    {userInfo?.first_name || "User"}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Lecturer
+                    {role.charAt(0).toUpperCase() + role.slice(1)}
                   </Typography>
                 </Box>
               </MenuItem>
 
               <Divider sx={{ my: 1 }} />
 
-              <MenuItem onClick={handleLogOut} className={styles.menuItemLogout}>
+              <MenuItem
+                onClick={handleLogOut}
+                className={styles.menuItemLogout}>
                 <LogoutIcon color="error" className={styles.menuItemIcon} />
                 <Typography color="error.main">Log out</Typography>
               </MenuItem>
@@ -164,23 +141,13 @@ export default function Appbar() {
             <Button
               variant="outlined"
               className={styles.signupButton}
-              onClick={() => navigate("/signup")}
-              sx={{
-                borderColor: "#1976d2",
-                color: "#1976d2",
-                "&:hover": {
-                  borderColor: "#1565c0",
-                  backgroundColor: "rgba(25, 118, 210, 0.04)",
-                },
-              }}
-            >
+              onClick={() => navigate("/signup")}>
               Sign up
             </Button>
             <Button
               variant="contained"
               className={styles.loginButton}
-              onClick={() => navigate("/login")}
-            >
+              onClick={() => navigate("/login")}>
               Log in
             </Button>
           </Box>
