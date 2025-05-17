@@ -1,8 +1,14 @@
-FROM node:18-alpine
+FROM node:18
 
 WORKDIR /app
-COPY package*.json ./
+
+COPY package.json package-lock.json* ./
+
 RUN npm install
+RUN apt-get update && apt-get install -y default-mysql-client
+
 COPY . .
+
 EXPOSE 8000
-CMD ["npm", "run", "dev"]
+
+CMD ["node", "server.js"]
