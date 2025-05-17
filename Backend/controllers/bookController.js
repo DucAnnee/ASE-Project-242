@@ -1,9 +1,10 @@
-const { validationResult } = require("express-validator");
-const db = require("../models/index.js");
-const { Op } = require("sequelize");
+const { validationResult } = require('express-validator');
+const dbPromise = require('../models/index.js');
+const { Op } = require('sequelize');
 
 exports.bookRoom = async (req, res) => {
   try {
+    const db = await dbPromise
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });

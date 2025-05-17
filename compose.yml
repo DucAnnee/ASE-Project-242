@@ -20,33 +20,94 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=mysql://root:password@mysql:3306/scams
+      - PRIMARY_DATABASE_URL=${PRIMARY_DATABASE_URL}@mysql-primary:3306/scams
+      - SECONDARY_DATABASE_URL=${SECONDARY_DATABASE_URL}@mysql-replica:3306/scams
+      - PRIMARY_HOST=mysql-primary
+      - PRIMARY_USER=root
+      - PRIMARY_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - PRIMARY_DB=scams
+      - SECONDARY_HOST=mysql-replica
+      - SECONDARY_USER=root
+      - SECONDARY_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - SECONDARY_DB=scams
+      - REPLICATION_ENABLED=true
       - JWT_SECRET=${JWT_SECRET}
       - PORT=8000
     volumes:
       - ./Backend:/app
       - /app/node_modules
     depends_on:
-      mysql:
+      mysql-primary:
+        condition: service_healthy
+      mysql-replica:
         condition: service_healthy
     restart: always
 
-  mysql:
+  mysql-primary:
     image: mysql:8.0
+    container_name: mysql-primary
+    hostname: mysql-primary
     ports:
       - "3306:3306"
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=scams
     volumes:
-      - mysql-data:/var/lib/mysql
+      - mysql-primary-data:/var/lib/mysql
       - ./Backend/ROMS.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./mysql/primary/conf.d:/etc/mysql/conf.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 30s
+    command: >
+      --server-id=1
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+      --binlog-do-db=scams
 
+  mysql-replica:
+    image: mysql:8.0
+    container_name: mysql-replica
+    hostname: mysql-replica
+    ports:
+      - "3307:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=scams
+    volumes:
+      - mysql-replica-data:/var/lib/mysql
+      - ./mysql/replica/conf.d:/etc/mysql/conf.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+    command: >
+      --server-id=2
+      --log-bin=mysql-bin
+      --binlog-format=ROW
+      --binlog-do-db=scams
+      --skip-slave-start
+  replication-setup:
+    image: mysql:8.0
+    volumes:
+      - ./mysql/init-replication.sh:/init-replication.sh
+    entrypoint: ["/bin/bash", "/init-replication.sh"]
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+      mysql-replica:
+        condition: service_healthy
+    restart: "unless-stopped"
 volumes:
-  mysql-data:
+  mysql-primary-data:
+  mysql-replica-data:
