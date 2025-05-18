@@ -60,6 +60,7 @@ exports.bookRoom = async (req, res) => {
 
 exports.checkBooking = async (req, res) => {
   try {
+    const db = await dbPromise
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });
@@ -99,6 +100,7 @@ exports.checkBooking = async (req, res) => {
 
 exports.displayRooms = async (req, res) => {
   try {
+    const db = await dbPromise
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });
@@ -146,6 +148,7 @@ exports.displayRooms = async (req, res) => {
 
 exports.changeBookStatus = async (req, res) => {
   try {
+    const db = await dbPromise
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });
@@ -188,6 +191,7 @@ exports.changeBookStatus = async (req, res) => {
 
 exports.getRoomBookings = async (req, res) => {
   try {
+    const db = await dbPromise
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });
