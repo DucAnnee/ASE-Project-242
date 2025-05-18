@@ -273,3 +273,73 @@ exports.getRoomBookings = async (req, res) => {
   }
 };
 
+exports.getRoomId = async (req, res) => {
+  try {
+    const db = await dbPromise;
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ error: errors.array() });
+
+    const { building_id, room_number } = req.body;
+
+    const room = await db.Room.findOne({
+      where: {
+        building_id,
+        room_number,
+      },
+    });
+
+    if (!room) {
+      return res.status(404).json({ error: "Room not found" });
+    }
+
+    return res.status(200).json({
+      room_id: room.room_id,
+    });
+  } catch (err) {
+    console.error("Error in getRoomId:", err);
+    return res
+      .status(500)
+      .json({ error: err.message || "Internal server error" });
+  }
+};
+
+exports.getUserBookings = async (req, res) => {
+  try {
+    const db = await dbPromise;
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ error: errors.array() });
+
+    const { username } = req.body;
+
+    const user = await db.User.findByPk(username);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const bookings = await db.Booking.findAll({
+      where: { user: username },
+      include: [
+        {
+          model: db.Room,
+          as: "room",
+          attributes: ["room_number", "building_id"],
+          include: {
+            model: db.Building,
+            as: "building",
+            attributes: ["name", "location"],
+          },
+        },
+      ],
+      order: [["start_time", "DESC"]],
+    });
+
+    return res.status(200).json({ username, bookings });
+  } catch (err) {
+    console.error("Error in getUserBookings:", err);
+    return res
+      .status(500)
+      .json({ error: err.message || "Internal server error" });
+  }
+};
