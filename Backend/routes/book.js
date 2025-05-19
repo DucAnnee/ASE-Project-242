@@ -51,11 +51,17 @@ router.get(
   getRoomBookings,
 );
 
-router.post(
+router.get(
   "/getRoomId",
   [
-    body("building_id").notEmpty().isInt(),
-    body("room_number").notEmpty().isInt(),
+    query("building_id")
+      .notEmpty().withMessage("building_id is required")
+      .isInt().withMessage("building_id must be an integer")
+      .toInt(),
+    query("room_number")
+      .notEmpty().withMessage("room_number is required")
+      .isInt().withMessage("room_number must be an integer")
+      .toInt(),
   ],
   getRoomId
 );
