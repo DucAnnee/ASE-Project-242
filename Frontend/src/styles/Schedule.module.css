@@ -581,3 +581,18 @@
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+/* Loading div */
+.loadingCentered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;       /* full height of container */
+  width: 100%;        /* full width of container */
+}
+
+.loadingCentered img {
+  width: 50%;
+  max-width: 200px;   /* optional max size */
+  height: auto;
+}
