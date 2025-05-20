@@ -4,30 +4,10 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import api from "../api/axios";
 import { useAuth } from "../contexts/AuthContext";
+import { Campuses, Rooms, buildingIdToCampus } from "../utils/campusMapping";
 
-/* ------------------------------------------------------------
-   Static mock data – replace with API calls when available
--------------------------------------------------------------*/
-const campuses = {
-  "Lí Thường Kiệt": [
-    "A1",
-    "A2",
-    "A3",
-    "A4",
-    "B1",
-    "B2",
-    "B3",
-    "B4",
-    "C1",
-    "C2",
-    "C3",
-    "C4",
-  ],
-  "Dĩ An": ["H1", "H2", "H3", "H4", "H5"],
-};
-const rooms = Array.from({ length: 5 }, (_, f) =>
-  Array.from({ length: 5 }, (_, r) => `${f + 1}0${r + 1}`)
-).flat();
+const campuses = Campuses;
+const rooms = Rooms;
 const hours = Array.from({ length: 19 }, (_, i) => `${i + 5}:00`);
 
 function getWeekDates(offset = 0) {
@@ -49,7 +29,7 @@ export default function Schedule() {
   --------------------------------------------------*/
   const { userInfo } = useAuth();
   const role = userInfo?.role?.toLowerCase() || "guest";
-  const canBook = role === "lecturer" || role === "teacher";
+  const canBook = role === "teacher";
 
   /* --------------------------------------------------
      UI state
@@ -57,12 +37,16 @@ export default function Schedule() {
   const [campus, setCampus] = useState("");
   const [building, setBuilding] = useState("");
   const [room, setRoom] = useState("");
+  const [roomId, setRoomId] = useState("");
   const [weekOffset, setWeekOffset] = useState(0);
 
+  const [refreshFlag, setRefreshFlag] = useState(0);
   const [selectedSlots, setSelectedSlots] = useState([]);
   const [bookedSlots, setBookedSlots] = useState([]);
   const [bookingDetails, setBookingDetails] = useState({});
   const [showModal, setShowModal] = useState(false);
+
+  const [loading, setLoading] = useState(false);
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset]);
 
@@ -71,18 +55,49 @@ export default function Schedule() {
   --------------------------------------------------*/
   useEffect(() => {
     const fetchBookings = async () => {
-      if (!room) return;
+      if (!room || !building || !campus) return;
+      setLoading(true);
+
       try {
-        const startISO = weekDates[0].toISOString();
-        const endISO = new Date(
-          weekDates[6].getTime() + 24 * 60 * 60 * 1000
-        ).toISOString();
-        const { data } = await api.get("/booking/room", {
-          params: { room_id: room, start: startISO, end: endISO },
+        const buildingEntry = Object.entries(buildingIdToCampus).find(
+          ([id, value]) => value.building === building,
+        );
+        if (!buildingEntry) {
+          toast.error("Building ID not found.");
+          return;
+        }
+        const building_id = buildingEntry[0];
+
+        const roomIdRes = await api.get("api/booking/getRoomId", {
+          params: {
+            building_id,
+            room_number: room,
+          },
         });
+
+        const room_id = roomIdRes.data.room_id;
+        setRoomId(room_id);
+
+        const bookingsAllWeek = await Promise.all(
+          weekDates.map(async (d) => {
+            const date = d.toISOString().split("T")[0];
+            try {
+              const res = await api.get("api/booking/roomBookings", {
+                params: { room_id, date },
+              });
+              return res.data.bookings;
+            } catch (err) {
+              console.error("Error fetching bookings for date:", date, err);
+              return [];
+            }
+          }),
+        );
+
+        const flatBookings = bookingsAllWeek.flat();
         const slots = [];
         const details = {};
-        data.bookings.forEach((b) => {
+
+        flatBookings.forEach((b) => {
           const st = new Date(b.start_time);
           const et = new Date(b.end_time);
           for (let h = st.getHours(); h < et.getHours(); h++) {
@@ -93,23 +108,26 @@ export default function Schedule() {
             const slot = `${labelDate}-${dayLabel}-${h}:00`;
             slots.push(slot);
             details[slot] = {
-              lecturer: b.bookedBy?.first_name || b.user,
-              subject: b.subject || "N/A",
-              room,
+              lecturer: b.full_name,
+              subject: "N/A",
+              room: b.room_id,
               building,
               campus,
             };
           }
         });
+
         setBookedSlots(slots);
         setBookingDetails(details);
       } catch (err) {
         console.error(err);
         toast.error("Failed to load bookings");
       }
+      setLoading(false);
     };
+
     fetchBookings();
-  }, [room, weekOffset, campus, building]);
+  }, [room, building, campus, weekOffset, refreshFlag]);
 
   /* --------------------------------------------------
      Slot selection
@@ -128,7 +146,7 @@ export default function Schedule() {
       return;
     }
     setSelectedSlots((prev) =>
-      prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot]
+      prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot],
     );
   };
 
@@ -142,27 +160,76 @@ export default function Schedule() {
 
   const confirmBooking = async () => {
     setShowModal(false);
+
     try {
+      console.log("Booking slots:", selectedSlots);
+
+      // goup selected slots
+      const slotsByDay = {};
+      selectedSlots.forEach((slot) => {
+        const [date, day, time] = slot.split("-");
+        const dayKey = `${date}-${day}`;
+        if (!slotsByDay[dayKey]) slotsByDay[dayKey] = [];
+        slotsByDay[dayKey].push(parseInt(time.split(":")[0]));
+      });
+      console.log(slotsByDay);
+
+      const bookingRequests = [];
+
+      // merge consecutive slots into ranges per day
+      Object.entries(slotsByDay).forEach(([dayKey, hours]) => {
+        hours.sort((a, b) => a - b);
+        const [d, m] = dayKey.split("-")[0].split("/").map(Number);
+
+        let s = hours[0];
+        let e = hours[0];
+        for (let i = 1; i < hours.length; i++) {
+          if (hours[i] === e + 1) {
+            e = hours[i];
+          } else {
+            bookingRequests.push({ d, m, s, e });
+            s = e = hours[i];
+          }
+        }
+        bookingRequests.push({ d, m, s, e });
+      });
+      console.log("Booking requests:", bookingRequests);
+
+      // send booking requests for each continuous range
+      // i want to kms
       await Promise.all(
-        selectedSlots.map((slot) => {
-          const [date, _day, time] = slot.split("-");
-          const [d, m] = date.split("/");
+        bookingRequests.map(({ d, m, s, e }) => {
+          console.log("Booking range:", { d, m, s, e });
           const start = new Date(weekDates[0]);
-          start.setDate(parseInt(d));
-          start.setMonth(parseInt(m) - 1);
-          start.setHours(parseInt(time));
-          const end = new Date(start.getTime() + 60 * 60 * 1000);
-          return api.post("/booking/book", {
-            room_id: room,
+          start.setDate(d);
+          start.setMonth(m - 1);
+          start.setHours(s, 0, 0, 0);
+
+          const end = new Date(start);
+          end.setHours(e + 1, 0, 0, 0);
+
+          console.log("Start:", start);
+          console.log("End:", end);
+
+          console.log("Booking:", {
+            start_time: start.toISOString(),
+            end_time: end.toISOString(),
+            roomId,
+            username: userInfo.username,
+          });
+
+          return api.post("/api/booking/book", {
+            room_id: roomId,
             username: userInfo.username,
             start_time: start.toISOString(),
             end_time: end.toISOString(),
           });
-        })
+        }),
       );
+
       toast.success("Successfully booked!");
       setSelectedSlots([]);
-      setWeekOffset((o) => o); // force refetch
+      setRefreshFlag((v) => 1);
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.error || "Booking failed");
@@ -192,11 +259,12 @@ export default function Schedule() {
                 setBuilding("");
                 setRoom("");
               }}
-              className={styles.selectBox}>
+              className={styles.selectBox}
+            >
               <option value="" disabled hidden>
                 Campus
               </option>
-              {Object.keys(campuses).map((c) => (
+              {Object.keys(Campuses).map((c) => (
                 <option key={c}>{c}</option>
               ))}
             </select>
@@ -210,12 +278,13 @@ export default function Schedule() {
               }}
               disabled={!campus}
               style={!campus ? disabledStyle : undefined}
-              className={styles.selectBox}>
+              className={styles.selectBox}
+            >
               <option value="" disabled hidden>
                 Building
               </option>
               {campus &&
-                campuses[campus].map((b) => <option key={b}>{b}</option>)}
+                Campuses[campus].map((b) => <option key={b}>{b}</option>)}
             </select>
 
             <label>Room</label>
@@ -224,11 +293,12 @@ export default function Schedule() {
               onChange={(e) => setRoom(e.target.value)}
               disabled={!building}
               style={!building ? disabledStyle : undefined}
-              className={styles.selectBox}>
+              className={styles.selectBox}
+            >
               <option value="" disabled hidden>
                 Room
               </option>
-              {rooms.map((r) => (
+              {Rooms.map((r) => (
                 <option key={r}>{r}</option>
               ))}
             </select>
@@ -248,174 +318,198 @@ export default function Schedule() {
         </div>
 
         {/* ---------------- Schedule grid --------------- */}
-        <div className={styles.scheduleWrapper}>
-          <div className={styles.scheduleGrid}>
-            {/* Header row */}
-            <div className={styles.headerRow}>
-              <div className={styles.timeCell}></div>
-              {weekDates.map((d) => {
-                const wd = d.toLocaleDateString("en-US", { weekday: "short" });
-                const md = `${d.getDate()}/${d.getMonth() + 1}`;
-                return (
-                  <div key={md} className={styles.dayCell}>
-                    <div className={styles.date}>{md}</div>
-                    <div className={styles.weekday}>{wd}</div>
-                  </div>
-                );
-              })}
+        <>
+          {loading ? (
+            <div className={styles.loadingCentered}>
+              <img src="/loading.gif" alt="Loading..." />
             </div>
-
-            {/* Time rows */}
-            {hours.map((hour) => (
-              <div key={hour} className={styles.row}>
-                <div className={styles.timeCell}>{hour}</div>
-                {weekDates.map((d) => {
-                  const dayLabel = d.toLocaleDateString("en-US", {
-                    weekday: "short",
-                  });
-                  const slotDate = `${d.getDate()}/${d.getMonth() + 1}`;
-                  const slot = `${slotDate}-${dayLabel}-${hour}`;
-                  const isSelected = selectedSlots.includes(slot);
-                  const isBooked = bookedSlots.includes(slot);
-                  const details = bookingDetails[slot];
-                  const isEarly = parseInt(hour) <= 7;
-                  const tipCls = `${styles.tooltipContainer} ${
-                    isEarly ? styles.tooltipContainerBottom : ""
-                  }`;
-                  return (
-                    <div
-                      key={slot}
-                      className={`${styles.slotCell} ${
-                        isSelected ? styles.selected : ""
-                      } ${isBooked ? styles.booked : ""}`}
-                      onClick={() => handleSlotClick(dayLabel, hour, d)}>
-                      {isBooked && details && (
-                        <div className={tipCls}>
-                          <div className={styles.tooltipTitle}>Information</div>
-                          <div className={styles.tooltipInfo}>
-                            <div className={styles.tooltipInfoItem}>
-                              <span className={styles.tooltipLabel}>
-                                Lecturer:
-                              </span>
-                              <span className={styles.tooltipValue}>
-                                {details.lecturer}
-                              </span>
-                            </div>
-                            <div className={styles.tooltipInfoItem}>
-                              <span className={styles.tooltipLabel}>
-                                Subject:
-                              </span>
-                              <span className={styles.tooltipValue}>
-                                {details.subject}
-                              </span>
-                            </div>
-                            <div className={styles.tooltipInfoItem}>
-                              <span className={styles.tooltipLabel}>
-                                Campus:
-                              </span>
-                              <span className={styles.tooltipValue}>
-                                {details.campus}
-                              </span>
-                            </div>
-                            <div className={styles.tooltipInfoItem}>
-                              <span className={styles.tooltipLabel}>Room:</span>
-                              <span className={styles.tooltipValue}>
-                                {details.room} - {details.building}
-                              </span>
-                            </div>
-                          </div>
+          ) : (
+            <>
+              {/* ---------------- Schedule Grid + Book Button + Modal --------------- */}
+              <div className={styles.scheduleWrapper}>
+                <div className={styles.scheduleGrid}>
+                  {/* Header row */}
+                  <div className={styles.headerRow}>
+                    <div className={styles.timeCell}></div>
+                    {weekDates.map((d) => {
+                      const wd = d.toLocaleDateString("en-US", {
+                        weekday: "short",
+                      });
+                      const md = `${d.getDate()}/${d.getMonth() + 1}`;
+                      return (
+                        <div key={md} className={styles.dayCell}>
+                          <div className={styles.date}>{md}</div>
+                          <div className={styles.weekday}>{wd}</div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </div>
+                      );
+                    })}
+                  </div>
 
-        {/* ---------------- Book button / modal --------------- */}
-        {canBook && (
-          <>
-            <button
-              className={styles.bookButton}
-              onClick={handleBook}
-              disabled={!selectedSlots.length}>
-              Book Room
-            </button>
-
-            {showModal && (
-              <div className={styles.modalBackdrop}>
-                <div className={styles.modal}>
-                  <h3 className={styles.modalTitle}>
-                    Confirm your appointment
-                  </h3>
-                  <div className={styles.modalContent}>
-                    <p>
-                      <strong>Name:</strong> {userInfo.first_name}
-                    </p>
-                    <p>
-                      <strong>Campus:</strong> {campus}
-                    </p>
-                    <p>
-                      <strong>Building:</strong> {building}
-                    </p>
-                    <p>
-                      <strong>Room:</strong> {room}
-                    </p>
-                    <p>
-                      <strong>Time:</strong>
-                    </p>
-                    <div style={{ marginTop: 8, paddingLeft: 20 }}>
-                      {(() => {
-                        const slotsByDay = {};
-                        selectedSlots.forEach((slot) => {
-                          const [date, day, time] = slot.split("-");
-                          const dayKey = `${date} ${day}`;
-                          if (!slotsByDay[dayKey]) slotsByDay[dayKey] = [];
-                          slotsByDay[dayKey].push(parseInt(time.split(":")[0]));
+                  {/* Time rows */}
+                  {hours.map((hour) => (
+                    <div key={hour} className={styles.row}>
+                      <div className={styles.timeCell}>{hour}</div>
+                      {weekDates.map((d) => {
+                        const dayLabel = d.toLocaleDateString("en-US", {
+                          weekday: "short",
                         });
-                        return Object.entries(slotsByDay).map(
-                          ([dayKey, hours], idx) => {
-                            hours.sort((a, b) => a - b);
-                            const ranges = [];
-                            let s = hours[0],
-                              e = hours[0];
-                            for (let i = 1; i < hours.length; i++) {
-                              if (hours[i] === e + 1) {
-                                e = hours[i];
-                              } else {
-                                ranges.push({ s, e });
-                                s = e = hours[i];
-                              }
-                            }
-                            ranges.push({ s, e });
-                            const str = ranges
-                              .map((r) =>
-                                r.s === r.e
-                                  ? `${r.s}:00`
-                                  : `${r.s}:00 to ${r.e + 1}:00`
-                              )
-                              .join(", ");
-                            return (
-                              <div key={idx} style={{ marginBottom: 4 }}>
-                                - {dayKey} at {str}
+                        const slotDate = `${d.getDate()}/${d.getMonth() + 1}`;
+                        const slot = `${slotDate}-${dayLabel}-${hour}`;
+                        const isSelected = selectedSlots.includes(slot);
+                        const isBooked = bookedSlots.includes(slot);
+                        const details = bookingDetails[slot];
+                        const isEarly = parseInt(hour) <= 7;
+                        const tipCls = `${styles.tooltipContainer} ${
+                          isEarly ? styles.tooltipContainerBottom : ""
+                        }`;
+                        return (
+                          <div
+                            key={slot}
+                            className={`${styles.slotCell} ${
+                              isSelected ? styles.selected : ""
+                            } ${isBooked ? styles.booked : ""}`}
+                            onClick={() => handleSlotClick(dayLabel, hour, d)}
+                          >
+                            {isBooked && details && (
+                              <div className={tipCls}>
+                                <div className={styles.tooltipTitle}>
+                                  Information
+                                </div>
+                                <div className={styles.tooltipInfo}>
+                                  <div className={styles.tooltipInfoItem}>
+                                    <span className={styles.tooltipLabel}>
+                                      Lecturer:
+                                    </span>
+                                    <span className={styles.tooltipValue}>
+                                      {details.lecturer}
+                                    </span>
+                                  </div>
+                                  <div className={styles.tooltipInfoItem}>
+                                    <span className={styles.tooltipLabel}>
+                                      Subject:
+                                    </span>
+                                    <span className={styles.tooltipValue}>
+                                      {details.subject}
+                                    </span>
+                                  </div>
+                                  <div className={styles.tooltipInfoItem}>
+                                    <span className={styles.tooltipLabel}>
+                                      Campus:
+                                    </span>
+                                    <span className={styles.tooltipValue}>
+                                      {details.campus}
+                                    </span>
+                                  </div>
+                                  <div className={styles.tooltipInfoItem}>
+                                    <span className={styles.tooltipLabel}>
+                                      Room:
+                                    </span>
+                                    <span className={styles.tooltipValue}>
+                                      {details.room} - {details.building}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                            );
-                          }
+                            )}
+                          </div>
                         );
-                      })()}
+                      })}
                     </div>
-                  </div>
-                  <div className={styles.modalActions}>
-                    <button onClick={confirmBooking}>OK</button>
-                    <button onClick={() => setShowModal(false)}>Cancel</button>
-                  </div>
+                  ))}
                 </div>
               </div>
-            )}
-          </>
-        )}
+
+              {/* ---------------- Book button and modal ---------------- */}
+              {canBook && (
+                <>
+                  <button
+                    className={styles.bookButton}
+                    onClick={handleBook}
+                    disabled={!selectedSlots.length}
+                  >
+                    Book Room
+                  </button>
+
+                  {showModal && (
+                    <div className={styles.modalBackdrop}>
+                      <div className={styles.modal}>
+                        <h3 className={styles.modalTitle}>
+                          Confirm your appointment
+                        </h3>
+                        <div className={styles.modalContent}>
+                          <p>
+                            <strong>Name:</strong> {userInfo.first_name}
+                          </p>
+                          <p>
+                            <strong>Campus:</strong> {campus}
+                          </p>
+                          <p>
+                            <strong>Building:</strong> {building}
+                          </p>
+                          <p>
+                            <strong>Room:</strong> {room}
+                          </p>
+                          <p>
+                            <strong>Time:</strong>
+                          </p>
+                          <div style={{ marginTop: 8, paddingLeft: 20 }}>
+                            {(() => {
+                              const slotsByDay = {};
+                              selectedSlots.forEach((slot) => {
+                                const [date, day, time] = slot.split("-");
+                                const dayKey = `${date} ${day}`;
+                                if (!slotsByDay[dayKey])
+                                  slotsByDay[dayKey] = [];
+                                slotsByDay[dayKey].push(
+                                  parseInt(time.split(":")[0]),
+                                );
+                              });
+                              return Object.entries(slotsByDay).map(
+                                ([dayKey, hours], idx) => {
+                                  hours.sort((a, b) => a - b);
+                                  const ranges = [];
+                                  let s = hours[0],
+                                    e = hours[0];
+                                  for (let i = 1; i < hours.length; i++) {
+                                    if (hours[i] === e + 1) {
+                                      e = hours[i];
+                                    } else {
+                                      ranges.push({ s, e });
+                                      s = e = hours[i];
+                                    }
+                                  }
+                                  ranges.push({ s, e });
+                                  const str = ranges
+                                    .map((r) =>
+                                      r.s === r.e
+                                        ? `${r.s}:00`
+                                        : `${r.s}:00 to ${r.e + 1}:00`,
+                                    )
+                                    .join(", ");
+                                  return (
+                                    <div key={idx} style={{ marginBottom: 4 }}>
+                                      - {dayKey} at {str}
+                                    </div>
+                                  );
+                                },
+                              );
+                            })()}
+                          </div>
+                        </div>
+                        <div className={styles.modalActions}>
+                          <button onClick={confirmBooking}>OK</button>
+                          <button onClick={() => setShowModal(false)}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </>
       </div>
 
       {/* Toast area */}

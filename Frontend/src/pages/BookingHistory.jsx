@@ -13,94 +13,63 @@ import { DataGrid } from "@mui/x-data-grid";
 import CancelIcon from "@mui/icons-material/Cancel";
 import styles from "../styles/Schedule.module.css";
 import { FullBox, MainContainer, MainPaper } from "../components/Containers";
+import { useAuth } from "../contexts/AuthContext";
+import api from "../api/axios";
+import buildingIdToCampus from "../utils/campusMapping";
 
 export default function BookingHistory() {
-  const [rows, setRows] = useState([
-    {
-      campus: "Lí Thường Kiệt",
-      building: "B4",
-      room: "502",
-      date: "2025-05-01",
-      time: "08:00 – 09:00",
-    },
-    {
-      campus: "Lí Thường Kiệt",
-      building: "B9",
-      room: "202",
-      date: "2025-05-02",
-      time: "09:30 – 10:30",
-    },
-    {
-      campus: "Dĩ An",
-      building: "H3",
-      room: "303",
-      date: "2025-05-03",
-      time: "11:00 – 12:00",
-    },
-    {
-      campus: "Dĩ An",
-      building: "H6",
-      room: "606",
-      date: "2025-05-04",
-      time: "13:00 – 14:00",
-    },
-    {
-      campus: "Lí Thường Kiệt",
-      building: "B4",
-      room: "306",
-      date: "2025-05-05",
-      time: "14:30 – 15:30",
-    },
-    {
-      campus: "Lí Thường Kiệt",
-      building: "B4",
-      room: "306",
-      date: "2025-05-13",
-      time: "14:30 – 15:30",
-    },
-    {
-      campus: "Lí Thường Kiệt",
-      building: "B4",
-      room: "306",
-      date: "2025-05-12",
-      time: "14:30 – 15:30",
-    },
-    {
-      campus: "Lí Thường Kiệt",
-      building: "B4",
-      room: "306",
-      date: "2025-05-10",
-      time: "14:30 – 15:30",
-    },
-  ]);
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const pageSizeOptions = [25, 50, 100];
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
 
-  // Get current date for comparison
   const currentDate = new Date().toISOString().split("T")[0];
+
+  const { userInfo } = useAuth();
 
   useEffect(() => {
     const fetchBookingHistory = async () => {
       setLoading(true);
       try {
-        const res = await fetch("TODO");
-        if (!res.ok) throw new Error("Fetch failed");
-        const data = await res.json();
-        const mapped = data.map((item, idx) => ({
-          // TODO
-        }));
+        console.log(userInfo.username);
+        const res = await api.post(
+          "/api/booking/userBookings",
+          {
+            username: userInfo.username,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        const data = res.data.bookings;
+        const mapped = data.map((booking) => {
+          const meta = buildingIdToCampus[booking.room.building_id] || {};
+          const start = new Date(booking.start_time);
+          const end = new Date(booking.end_time);
+
+          return {
+            campus: meta.campus || "Unknown",
+            building: meta.building || "Unknown",
+            room: booking.room.room_number,
+            date: start.toISOString().split("T")[0],
+            time: `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} – ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+          };
+        });
+
         setRows(mapped);
       } catch (err) {
-        console.error(err);
+        console.error("Failed to fetch bookings:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchBookingHistory();
-  }, []);
+  }, [userInfo?.username]);
 
   const handleCancelClick = (booking) => {
     setSelectedBooking(booking);
@@ -109,8 +78,7 @@ export default function BookingHistory() {
 
   const handleConfirmCancel = async () => {
     try {
-      // Here you would make an API call to cancel the booking
-      // For now, let's just remove it from the local state
+      // TODO: Call the API to cancel the booking
       setRows(
         rows.filter(
           (row) =>
@@ -120,8 +88,8 @@ export default function BookingHistory() {
               row.room === selectedBooking.room &&
               row.date === selectedBooking.date &&
               row.time === selectedBooking.time
-            )
-        )
+            ),
+        ),
       );
 
       // Close the dialog
@@ -174,7 +142,8 @@ export default function BookingHistory() {
               "&:hover": {
                 backgroundColor: "#ffebee",
               },
-            }}>
+            }}
+          >
             Cancel
           </Button>
         ) : (
@@ -182,7 +151,8 @@ export default function BookingHistory() {
             variant="text"
             disabled
             size="small"
-            sx={{ color: "#aaa", cursor: "not-allowed", minWidth: "100px" }}>
+            sx={{ color: "#aaa", cursor: "not-allowed", minWidth: "100px" }}
+          >
             No Action
           </Button>
         );
@@ -196,22 +166,28 @@ export default function BookingHistory() {
 
       <MainContainer>
         <MainPaper>
-          <FullBox>
-            <DataGrid
-              sx={{
-                height: "100%",
-                width: "100%",
-              }}
-              rows={rows}
-              columns={columns}
-              loading={loading}
-              pageSizeOptions={pageSizeOptions}
-              disableSelectionOnClick
-              getRowId={(row) =>
-                `${row.campus}-${row.building}-${row.room}-${row.date}-${row.time}`
-              }
-            />
-          </FullBox>
+          {loading ? (
+            <div className={styles.loadingCentered}>
+              <img src="/loading.gif" alt="Loading..." />
+            </div>
+          ) : (
+            <FullBox>
+              <DataGrid
+                sx={{
+                  height: "100%",
+                  width: "100%",
+                }}
+                rows={rows}
+                columns={columns}
+                loading={loading}
+                pageSizeOptions={pageSizeOptions}
+                disableSelectionOnClick
+                getRowId={(row) =>
+                  `${row.campus}-${row.building}-${row.room}-${row.date}-${row.time}`
+                }
+              />
+            </FullBox>
+          )}
         </MainPaper>
       </MainContainer>
 
@@ -220,7 +196,8 @@ export default function BookingHistory() {
         open={openConfirmDialog}
         onClose={() => setOpenConfirmDialog(false)}
         aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description">
+        aria-describedby="alert-dialog-description"
+      >
         <DialogTitle id="alert-dialog-title">
           {"Confirm cancellation"}
         </DialogTitle>
@@ -251,7 +228,8 @@ export default function BookingHistory() {
           </DialogContentText>
         </DialogContent>
         <DialogActions
-          sx={{ p: 2, display: "flex", justifyContent: "space-between" }}>
+          sx={{ p: 2, display: "flex", justifyContent: "space-between" }}
+        >
           <Button
             onClick={() => setOpenConfirmDialog(false)}
             variant="contained"
@@ -261,14 +239,16 @@ export default function BookingHistory() {
               "&:hover": {
                 bgcolor: "#27A4F2",
               },
-            }}>
+            }}
+          >
             Cancel
           </Button>
           <Button
             onClick={handleConfirmCancel}
             color="error"
             variant="contained"
-            autoFocus>
+            autoFocus
+          >
             Confirm
           </Button>
         </DialogActions>

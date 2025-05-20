@@ -6,6 +6,8 @@ const {
   displayRooms,
   changeBookStatus,
   getRoomBookings,
+  getRoomId,
+  getUserBookings,
 } = require("../controllers/bookController.js");
 
 const router = express.Router();
@@ -48,6 +50,28 @@ router.get(
   [query("room_id").notEmpty().isInt(), query("date").notEmpty().isISO8601()],
   getRoomBookings,
 );
+
+router.get(
+  "/getRoomId",
+  [
+    query("building_id")
+      .notEmpty().withMessage("building_id is required")
+      .isInt().withMessage("building_id must be an integer")
+      .toInt(),
+    query("room_number")
+      .notEmpty().withMessage("room_number is required")
+      .isInt().withMessage("room_number must be an integer")
+      .toInt(),
+  ],
+  getRoomId
+);
+
+router.post(
+  "/userBookings",
+  [body("username").notEmpty()],
+  getUserBookings
+);
+
 
 module.exports = router;
 
