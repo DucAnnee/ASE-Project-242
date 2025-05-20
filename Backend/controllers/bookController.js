@@ -1,10 +1,10 @@
-const { validationResult } = require('express-validator');
-const dbPromise = require('../models/index.js');
-const { Op } = require('sequelize');
+const { validationResult } = require("express-validator");
+const dbPromise = require("../models/index.js");
+const { Op } = require("sequelize");
 
 exports.bookRoom = async (req, res) => {
   try {
-    const db = await dbPromise
+    const db = await dbPromise;
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });
@@ -60,7 +60,7 @@ exports.bookRoom = async (req, res) => {
 
 exports.checkBooking = async (req, res) => {
   try {
-    const db = await dbPromise
+    const db = await dbPromise;
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });
@@ -100,7 +100,7 @@ exports.checkBooking = async (req, res) => {
 
 exports.displayRooms = async (req, res) => {
   try {
-    const db = await dbPromise
+    const db = await dbPromise;
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });
@@ -148,7 +148,7 @@ exports.displayRooms = async (req, res) => {
 
 exports.changeBookStatus = async (req, res) => {
   try {
-    const db = await dbPromise
+    const db = await dbPromise;
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });
@@ -191,7 +191,7 @@ exports.changeBookStatus = async (req, res) => {
 
 exports.getRoomBookings = async (req, res) => {
   try {
-    const db = await dbPromise
+    const db = await dbPromise;
     const errors = validationResult(req);
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });
@@ -226,6 +226,9 @@ exports.getRoomBookings = async (req, res) => {
     const mappedBookings = bookings.map((booking) => {
       const startDate = new Date(booking.start_time);
       const endDate = new Date(booking.end_time);
+
+      startDate.setHours(startDate.getHours() + 7);
+      endDate.setHours(endDate.getHours() + 7);
 
       const startHour =
         startDate.getUTCHours() + startDate.getUTCMinutes() / 60;
@@ -284,7 +287,7 @@ exports.getRoomId = async (req, res) => {
     if (!errors.isEmpty())
       return res.status(400).json({ error: errors.array() });
 
-    const { building_id, room_number } = req.body;
+    const { building_id, room_number } = req.query;
 
     const room = await db.Room.findOne({
       where: {
