@@ -110,7 +110,7 @@ export default function Schedule() {
             details[slot] = {
               lecturer: b.full_name,
               subject: "N/A",
-              room: b.room_id,
+              room: room,
               building,
               campus,
             };
