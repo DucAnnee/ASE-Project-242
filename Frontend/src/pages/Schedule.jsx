@@ -199,7 +199,6 @@ export default function Schedule() {
       // i want to kms
       await Promise.all(
         bookingRequests.map(({ d, m, s, e }) => {
-          console.log("Booking range:", { d, m, s, e });
           const start = new Date(weekDates[0]);
           start.setDate(d);
           start.setMonth(m - 1);
@@ -208,16 +207,16 @@ export default function Schedule() {
           const end = new Date(start);
           end.setHours(e + 1, 0, 0, 0);
 
-          console.log("Start:", start);
-          console.log("End:", end);
-
-          console.log("Booking:", {
-            start_time: start.toISOString(),
-            end_time: end.toISOString(),
-            roomId,
-            username: userInfo.username,
-          });
-
+          // console.log("Start:", start);
+          // console.log("End:", end);
+          //
+          // console.log("Booking:", {
+          //   start_time: start.toISOString(),
+          //   end_time: end.toISOString(),
+          //   roomId,
+          //   username: userInfo.username,
+          // });
+          //
           return api.post("/api/booking/book", {
             room_id: roomId,
             username: userInfo.username,

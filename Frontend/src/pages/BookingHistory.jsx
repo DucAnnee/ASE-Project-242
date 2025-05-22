@@ -14,6 +14,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import styles from "../styles/Schedule.module.css";
 import { FullBox, MainContainer, MainPaper } from "../components/Containers";
 import { useAuth } from "../contexts/AuthContext";
+import { toast, ToastContainer } from "react-toastify";
 import api from "../api/axios";
 import buildingIdToCampus from "../utils/campusMapping";
 
@@ -23,6 +24,8 @@ export default function BookingHistory() {
   const pageSizeOptions = [25, 50, 100];
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [room_id, setRoomId] = useState(null);
+  const [refreshFlag, setRefreshFlag] = useState(0);
 
   const currentDate = new Date().toISOString().split("T")[0];
 
@@ -51,12 +54,21 @@ export default function BookingHistory() {
           const start = new Date(booking.start_time);
           const end = new Date(booking.end_time);
 
+          console.log(start.toLocaleDateString("sv-SE"));
+
           return {
             campus: meta.campus || "Unknown",
             building: meta.building || "Unknown",
             room: booking.room.room_number,
-            date: start.toISOString().split("T")[0],
-            time: `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} – ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`,
+            date: start.toLocaleDateString("sv-SE"),
+            time: `${start.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })} – ${end.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}`,
+            status: booking.status,
           };
         });
 
@@ -69,7 +81,7 @@ export default function BookingHistory() {
     };
 
     fetchBookingHistory();
-  }, [userInfo?.username]);
+  }, [userInfo?.username, refreshFlag]);
 
   const handleCancelClick = (booking) => {
     setSelectedBooking(booking);
@@ -78,28 +90,68 @@ export default function BookingHistory() {
 
   const handleConfirmCancel = async () => {
     try {
-      // TODO: Call the API to cancel the booking
-      setRows(
-        rows.filter(
-          (row) =>
-            !(
-              row.campus === selectedBooking.campus &&
-              row.building === selectedBooking.building &&
-              row.room === selectedBooking.room &&
-              row.date === selectedBooking.date &&
-              row.time === selectedBooking.time
-            ),
-        ),
+      const buildingEntry = Object.entries(buildingIdToCampus).find(
+        ([id, value]) => value.building === selectedBooking.building,
       );
+      if (!buildingEntry) {
+        toast.error("Building ID not found.");
+        return;
+      }
+      const building_id = buildingEntry[0];
 
-      // Close the dialog
+      const roomIdRes = await api.get("api/booking/getRoomId", {
+        params: {
+          building_id,
+          room_number: selectedBooking.room,
+        },
+      });
+
+      const room_id = roomIdRes.data.room_id;
+      console.log("Room ID:", room_id);
+
+      const parseTime12 = (timeStr) => {
+        const [hourMin, period] = timeStr.split(" ");
+        let [hour, minute] = hourMin.split(":").map(Number);
+        if (period === "PM" && hour !== 12) hour += 12;
+        if (period === "AM" && hour === 12) hour = 0;
+        return { hour, minute };
+      };
+
+      const timeRange = selectedBooking.time.replace("–", "-");
+      const [startStr, endStr] = timeRange.split("-").map((s) => s.trim());
+      const dateStr = selectedBooking.date;
+
+      const { hour: startHour, minute: startMinute } = parseTime12(startStr);
+      const { hour: endHour, minute: endMinute } = parseTime12(endStr);
+
+      const start = new Date(dateStr);
+      start.setHours(startHour, startMinute, 0, 0);
+
+      const end = new Date(dateStr);
+      end.setHours(endHour, endMinute, 0, 0);
+
       setOpenConfirmDialog(false);
       setSelectedBooking(null);
+
+      const res = await api.post("/api/booking/cancel", {
+        room_id: room_id,
+        username: userInfo.username,
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
+      });
+
+      console.log("Cancel response:", res.data);
+      toast.success("Booking cancelled successfully");
+      console.log("Booking cancelled successfully");
+      setRefreshFlag((v) => v + 1);
     } catch (err) {
       console.error("Error canceling booking:", err);
+      toast.error("Failed to cancel booking");
+      setOpenConfirmDialog(false);
+      setSelectedBooking(null);
+      toast.error("Failed to cancel booking");
     }
   };
-
   const columns = [
     {
       field: "stt",
@@ -120,13 +172,26 @@ export default function BookingHistory() {
     { field: "time", headerName: "Time", flex: 3 },
     {
       field: "cancel",
-      headerName: "Edit",
+      headerName: "Action",
       flex: 2,
       sortable: false,
       filterable: false,
       renderCell: (params) => {
-        // Check if booking date is in the future
         const isFutureBooking = params.row.date > currentDate;
+        const isCancelled = params.row.status === "cancelled";
+
+        if (isCancelled) {
+          return (
+            <Button
+              variant="text"
+              disabled
+              size="small"
+              sx={{ color: "#aaa", minWidth: "100px", textTransform: "none" }}
+            >
+              CANCELLED
+            </Button>
+          );
+        }
 
         return isFutureBooking ? (
           <Button
@@ -253,6 +318,7 @@ export default function BookingHistory() {
           </Button>
         </DialogActions>
       </Dialog>
+      <ToastContainer position="bottom-center" theme="colored" />
     </>
   );
 }

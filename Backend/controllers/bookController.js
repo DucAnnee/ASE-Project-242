@@ -210,6 +210,7 @@ exports.getRoomBookings = async (req, res) => {
     const bookings = await db.Booking.findAll({
       where: {
         room_id,
+        status: { [Op.ne]: "cancelled" },
         start_time: { [Op.lt]: endOfDay },
         end_time: { [Op.gt]: startOfDay },
       },
@@ -345,6 +346,71 @@ exports.getUserBookings = async (req, res) => {
     return res.status(200).json({ username, bookings });
   } catch (err) {
     console.error("Error in getUserBookings:", err);
+    return res
+      .status(500)
+      .json({ error: err.message || "Internal server error" });
+  }
+};
+
+function formatDateTime(dateInput) {
+  const date = new Date(dateInput);
+  const pad = (n) => n.toString().padStart(2, "0");
+
+  const yyyy = date.getUTCFullYear();
+  const mm = pad(date.getUTCMonth() + 1);
+  const dd = pad(date.getUTCDate());
+  const hh = pad(date.getUTCHours());
+  const mi = pad(date.getUTCMinutes());
+  const ss = pad(date.getUTCSeconds());
+
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+}
+
+exports.cancelBooking = async (req, res) => {
+  try {
+    const db = await dbPromise;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: errors.array() });
+    }
+
+    const { room_id, username, start_time, end_time } = req.body;
+
+    if (!username || !start_time || !end_time) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const formattedStart = formatDateTime(start_time);
+    const formattedEnd = formatDateTime(end_time);
+
+    const booking = await db.Booking.findOne({
+      where: {
+        room_id: room_id,
+        user: username,
+        status: { [Op.ne]: "cancelled" },
+        [Op.or]: [
+          {
+            start_time: { [Op.lt]: new Date(end_time) },
+            end_time: { [Op.gt]: new Date(start_time) },
+          },
+        ],
+      },
+    });
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    if (booking.status === "cancelled") {
+      return res.status(400).json({ error: "Booking already cancelled" });
+    }
+
+    booking.status = "cancelled";
+    await booking.save();
+
+    return res.status(200).json({ message: "Booking cancelled successfully" });
+  } catch (err) {
+    console.error("Error in cancelBooking:", err);
     return res
       .status(500)
       .json({ error: err.message || "Internal server error" });
