@@ -35,7 +35,7 @@ export default function BookingHistory() {
     const fetchBookingHistory = async () => {
       setLoading(true);
       try {
-        console.log(userInfo.username);
+        // console.log(userInfo.username);
         const res = await api.post(
           "/api/booking/userBookings",
           {
@@ -54,7 +54,7 @@ export default function BookingHistory() {
           const start = new Date(booking.start_time);
           const end = new Date(booking.end_time);
 
-          console.log(start.toLocaleDateString("sv-SE"));
+          // console.log(start.toLocaleDateString("sv-SE"));
 
           return {
             campus: meta.campus || "Unknown",
@@ -94,6 +94,7 @@ export default function BookingHistory() {
         ([id, value]) => value.building === selectedBooking.building,
       );
       if (!buildingEntry) {
+        toast.dismiss();
         toast.error("Building ID not found.");
         return;
       }
@@ -107,7 +108,7 @@ export default function BookingHistory() {
       });
 
       const room_id = roomIdRes.data.room_id;
-      console.log("Room ID:", room_id);
+      // console.log("Room ID:", room_id);
 
       const parseTime12 = (timeStr) => {
         const [hourMin, period] = timeStr.split(" ");
@@ -140,16 +141,17 @@ export default function BookingHistory() {
         end_time: end.toISOString(),
       });
 
-      console.log("Cancel response:", res.data);
+      // console.log("Cancel response:", res.data);
+      toast.dismiss();
       toast.success("Booking cancelled successfully");
       console.log("Booking cancelled successfully");
       setRefreshFlag((v) => v + 1);
     } catch (err) {
       console.error("Error canceling booking:", err);
+      toast.dismiss();
       toast.error("Failed to cancel booking");
       setOpenConfirmDialog(false);
       setSelectedBooking(null);
-      toast.error("Failed to cancel booking");
     }
   };
   const columns = [
@@ -176,9 +178,25 @@ export default function BookingHistory() {
       flex: 2,
       sortable: false,
       filterable: false,
+
       renderCell: (params) => {
-        const isFutureBooking = params.row.date > currentDate;
         const isCancelled = params.row.status === "cancelled";
+
+        // Extract and parse start time (e.g., "05:00 PM")
+        const [startTimeStr] = params.row.time.split("–").map((s) => s.trim());
+        const [startTime, period] = startTimeStr.split(" ");
+        let [hour, minute] = startTime.split(":").map(Number);
+        if (period === "PM" && hour !== 12) hour += 12;
+        if (period === "AM" && hour === 12) hour = 0;
+
+        // Parse date string (e.g., "2025-05-23")
+        const [year, month, day] = params.row.date.split("-").map(Number);
+
+        // Construct booking start Date
+        const bookingStart = new Date(year, month - 1, day, hour, minute);
+        const now = new Date();
+
+        const isFutureBooking = bookingStart > now;
 
         if (isCancelled) {
           return (
