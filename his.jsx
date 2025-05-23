@@ -15,8 +15,10 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import styles from "../styles/Schedule.module.css";
 import { FullBox, MainContainer, MainPaper } from "../components/Containers";
 import { useAuth } from "../contexts/AuthContext";
-import { toast, ToastContainer } from "react-toastify";
 import api from "../api/axios";
+// Add this import at the top
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import buildingIdToCampus from "../utils/campusMapping";
 
 export default function BookingHistory() {
@@ -25,10 +27,6 @@ export default function BookingHistory() {
   const pageSizeOptions = [25, 50, 100];
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [room_id, setRoomId] = useState(null);
-  const [refreshFlag, setRefreshFlag] = useState(0);
-
-  // Thêm theme tùy chỉnh cho DataGrid
   const customTheme = createTheme({
     components: {
       MuiDataGrid: {
@@ -45,78 +43,76 @@ export default function BookingHistory() {
   });
 
   const currentDate = new Date().toISOString().split("T")[0];
-
   const { userInfo } = useAuth();
 
-  useEffect(() => {
-    const fetchBookingHistory = async () => {
-      setLoading(true);
-      try {
-        const res = await api.post(
-          "/api/booking/userBookings",
-          {
-            username: userInfo.username,
+  // Move fetchBookingHistory outside useEffect so it can be called elsewhere
+  const fetchBookingHistory = async () => {
+    if (!userInfo?.username) return;
+
+    setLoading(true);
+    try {
+      console.log("Fetching bookings for:", userInfo.username);
+      const res = await api.post(
+        "/api/booking/userBookings",
+        {
+          username: userInfo.username,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
           },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        }
+      );
 
-        const data = res.data.bookings;
+      const data = res.data.bookings;
+      const mapped = data.map((booking) => {
+        const meta = buildingIdToCampus[booking.room.building_id] || {};
 
-        // Sử dụng Map để theo dõi các booking theo vị trí và thời gian
-        const bookingMap = new Map();
+        // Fix: Create date objects from booking start time
+        const startTime = new Date(booking.start_time);
 
-        // Xử lý tất cả các booking, ưu tiên booking không bị hủy
-        data.forEach((booking) => {
-          const meta = buildingIdToCampus[booking.room.building_id] || {};
-          const start = new Date(booking.start_time);
-          const end = new Date(booking.end_time);
+        // Format the date in YYYY-MM-DD without timezone conversions
+        // This preserves the actual date as stored in database
+        const year = startTime.getFullYear();
+        const month = String(startTime.getMonth() + 1).padStart(2, "0");
+        const day = String(startTime.getDate()).padStart(2, "0");
+        const dateStr = `${year}-${month}-${day}`;
 
-          // Tạo key duy nhất dựa trên thông tin phòng và thời gian
-          const key = `${booking.room.room_number}-${
-            booking.room.building_id
-          }-${start.toLocaleDateString(
-            "sv-SE"
-          )}-${start.toLocaleTimeString()}-${end.toLocaleTimeString()}`;
+        const endTime = new Date(booking.end_time);
 
-          // Chỉ giữ booking mới nhất cho mỗi slot thời gian
-          // Nếu đã có một booking cho slot này và booking hiện tại không bị hủy, thay thế
-          if (
-            !bookingMap.has(key) ||
-            (booking.status !== "cancelled" && bookingMap.get(key).status === "cancelled")
-          ) {
-            bookingMap.set(key, {
-              campus: meta.campus || "Unknown",
-              building: meta.building || "Unknown",
-              room: booking.room.room_number,
-              date: start.toLocaleDateString("sv-SE"),
-              time: `${start.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })} – ${end.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}`,
-              status: booking.status,
-            });
-          }
-        });
+        return {
+          booking_id: booking.id,
+          campus: meta.campus || "Unknown",
+          building: meta.building || "Unknown",
+          room: booking.room.room_number,
+          date: dateStr,
+          time: `${startTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })} – ${endTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}`,
+          status: booking.status,
+        };
+      });
 
-        // Chuyển đổi các giá trị từ Map thành mảng để hiển thị
-        const mapped = Array.from(bookingMap.values());
-        setRows(mapped);
-      } catch (err) {
-        console.error("Failed to fetch bookings:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+      // Filter out cancelled bookings - this is crucial!
+      const activeBookings = mapped.filter((booking) => booking.status !== "cancelled");
+      setRows(activeBookings);
+      console.log("Active bookings loaded:", activeBookings.length);
+    } catch (err) {
+      console.error("Failed to fetch bookings:", err);
+      toast.error("Could not load booking history");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // Call fetchBookingHistory when component mounts
+  useEffect(() => {
     fetchBookingHistory();
-  }, [userInfo?.username, refreshFlag]);
+  }, [userInfo?.username]);
 
   const handleCancelClick = (booking) => {
     setSelectedBooking(booking);
@@ -124,71 +120,74 @@ export default function BookingHistory() {
   };
 
   const handleConfirmCancel = async () => {
-    try {
-      const buildingEntry = Object.entries(buildingIdToCampus).find(
-        ([id, value]) => value.building === selectedBooking.building
-      );
-      if (!buildingEntry) {
-        toast.dismiss();
-        toast.error("Building ID not found.");
-        return;
-      }
-      const building_id = buildingEntry[0];
+    if (!selectedBooking) return;
 
-      const roomIdRes = await api.get("api/booking/getRoomId", {
-        params: {
-          building_id,
-          room_number: selectedBooking.room,
+    try {
+      console.log("Cancelling booking:", selectedBooking.booking_id);
+
+      // Call the API to cancel the booking
+      await api.put(
+        "/api/booking/booking/status",
+        {
+          booking_id: selectedBooking.booking_id,
+          new_status: "cancelled",
+          username: userInfo.username,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // After successful API call, update the UI immediately
+      setRows(rows.filter((row) => row.booking_id !== selectedBooking.booking_id));
+
+      // Add more details to the cancellation notification in localStorage
+      // This helps Schedule.jsx detect the change
+      localStorage.setItem(
+        "bookingCancelled",
+        JSON.stringify({
+          timestamp: new Date().getTime(),
+          bookingId: selectedBooking.booking_id,
+          campus: selectedBooking.campus,
+          building: selectedBooking.building,
+          room: selectedBooking.room,
+          date: selectedBooking.date,
+        })
+      );
+
+      // Fire a custom event that Schedule.jsx can listen for
+      const cancelEvent = new CustomEvent("bookingCancelled", {
+        detail: {
+          bookingId: selectedBooking.booking_id,
+          room: selectedBooking.room,
+          building: selectedBooking.building,
+          campus: selectedBooking.campus,
+          timestamp: new Date().getTime(),
         },
       });
+      window.dispatchEvent(cancelEvent);
+      console.log("Cancellation event dispatched");
 
-      const room_id = roomIdRes.data.room_id;
-      // console.log("Room ID:", room_id);
-
-      const parseTime12 = (timeStr) => {
-        const [hourMin, period] = timeStr.split(" ");
-        let [hour, minute] = hourMin.split(":").map(Number);
-        if (period === "PM" && hour !== 12) hour += 12;
-        if (period === "AM" && hour === 12) hour = 0;
-        return { hour, minute };
-      };
-
-      const timeRange = selectedBooking.time.replace("–", "-");
-      const [startStr, endStr] = timeRange.split("-").map((s) => s.trim());
-      const dateStr = selectedBooking.date;
-
-      const { hour: startHour, minute: startMinute } = parseTime12(startStr);
-      const { hour: endHour, minute: endMinute } = parseTime12(endStr);
-
-      const start = new Date(dateStr);
-      start.setHours(startHour, startMinute, 0, 0);
-
-      const end = new Date(dateStr);
-      end.setHours(endHour, endMinute, 0, 0);
-
+      // Close the dialog
       setOpenConfirmDialog(false);
       setSelectedBooking(null);
 
-      const res = await api.post("/api/booking/cancel", {
-        room_id: room_id,
-        username: userInfo.username,
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
-      });
+      // Show success message
+      toast.success("Booking has been successfully cancelled");
 
-      // console.log("Cancel response:", res.data);
-      toast.dismiss();
-      toast.success("Booking cancelled successfully");
-      console.log("Booking cancelled successfully");
-      setRefreshFlag((v) => v + 1);
+      // Force reload the booking list to ensure we have the latest data
+      // setTimeout helps ensure the backend has processed the cancellation
+      setTimeout(() => {
+        fetchBookingHistory();
+      }, 500);
     } catch (err) {
       console.error("Error canceling booking:", err);
-      toast.dismiss();
-      toast.error("Failed to cancel booking");
-      setOpenConfirmDialog(false);
-      setSelectedBooking(null);
+      toast.error("Failed to cancel booking. Please try again.");
     }
   };
+
   const columns = [
     {
       field: "stt",
@@ -209,42 +208,13 @@ export default function BookingHistory() {
     { field: "time", headerName: "Time", flex: 3 },
     {
       field: "cancel",
-      headerName: "Action",
+      headerName: "Edit",
       flex: 2,
       sortable: false,
       filterable: false,
-
       renderCell: (params) => {
-        const isCancelled = params.row.status === "cancelled";
-
-        // Extract and parse start time (e.g., "05:00 PM")
-        const [startTimeStr] = params.row.time.split("–").map((s) => s.trim());
-        const [startTime, period] = startTimeStr.split(" ");
-        let [hour, minute] = startTime.split(":").map(Number);
-        if (period === "PM" && hour !== 12) hour += 12;
-        if (period === "AM" && hour === 12) hour = 0;
-
-        // Parse date string (e.g., "2025-05-23")
-        const [year, month, day] = params.row.date.split("-").map(Number);
-
-        // Construct booking start Date
-        const bookingStart = new Date(year, month - 1, day, hour, minute);
-        const now = new Date();
-
-        const isFutureBooking = bookingStart > now;
-
-        if (isCancelled) {
-          return (
-            <Button
-              variant="text"
-              disabled
-              size="small"
-              sx={{ color: "#aaa", minWidth: "100px", textTransform: "none" }}
-            >
-              CANCELLED
-            </Button>
-          );
-        }
+        // Check if booking date is in the future
+        const isFutureBooking = params.row.date > currentDate;
 
         return isFutureBooking ? (
           <Button
@@ -281,6 +251,7 @@ export default function BookingHistory() {
   return (
     <>
       <div className={styles.pageBackground} />
+      <ToastContainer position="top-right" />
 
       <MainContainer>
         <MainPaper>
@@ -295,7 +266,6 @@ export default function BookingHistory() {
                   sx={{
                     height: "100%",
                     width: "100%",
-                    // Thêm style để căn chỉnh phân trang
                     "& .MuiTablePagination-root": {
                       display: "flex",
                       alignItems: "center",
@@ -324,7 +294,10 @@ export default function BookingHistory() {
                   }}
                   disableSelectionOnClick
                   getRowId={(row) =>
-                    `${row.campus}-${row.building}-${row.room}-${row.date}-${row.time}`
+                    `${
+                      row.booking_id ||
+                      `${row.campus}-${row.building}-${row.room}-${row.date}-${row.time}`
+                    }`
                   }
                 />
               </ThemeProvider>
@@ -386,7 +359,6 @@ export default function BookingHistory() {
           </Button>
         </DialogActions>
       </Dialog>
-      <ToastContainer position="bottom-center" theme="colored" />
     </>
   );
 }
